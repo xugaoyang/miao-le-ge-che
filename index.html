@@ -16,8 +16,8 @@
     background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
   header{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 4px;gap:6px}
   .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;
-    box-shadow:0 2px 0 rgba(0,0,0,.08);min-width:72px}
-  #levelLabel{font-size:18px;font-weight:800;letter-spacing:1px;white-space:nowrap}
+    box-shadow:0 2px 0 rgba(0,0,0,.08);white-space:nowrap;flex:none}
+  #levelLabel{font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1;text-align:center}
   .tools{display:flex;gap:6px}
   .iconbtn{border:0;background:var(--card);border-radius:12px;width:36px;height:36px;font-size:17px;
     box-shadow:0 2px 0 rgba(0,0,0,.1);cursor:pointer;padding:0}
@@ -65,6 +65,28 @@
   .dexcard small{font-size:11px;color:var(--muted)}
   .bar{height:5px;background:#EADFD1;border-radius:9px;margin-top:4px;overflow:hidden}
   .bar i{display:block;height:100%;background:var(--accent)}
+  .logo{font-size:56px;line-height:1}
+  .homebtn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px}
+  .homebtn small{font-size:12px;font-weight:500;opacity:.9}
+  .homerow{display:flex;gap:10px}
+  .homerow .btn{flex:1}
+  .dialog p.mini{font-size:12px;margin-top:12px}
+  .sharecard{background:#F3ECE4;border-radius:14px;padding:12px;margin:10px 0;text-align:left}
+  .sharetitle{font-size:14px;font-weight:700;line-height:1.4}
+  .shareimg{margin-top:8px;height:90px;border-radius:10px;background:linear-gradient(135deg,#FFB36B,#FF7EB6);display:flex;
+    align-items:center;justify-content:center;gap:8px;font-size:34px;color:#fff}
+  .shareimg span{font-size:18px;font-weight:800}
+  .provgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:8px 0}
+  .prov{border:0;background:#F3ECE4;border-radius:10px;padding:9px 0;font-size:13px;cursor:pointer;color:var(--ink)}
+  .prov.on{background:var(--accent);color:#fff}
+  .rank{text-align:left;margin:6px 0}
+  .rankrow{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:10px;font-size:14px}
+  .rankrow:nth-child(odd){background:#FBF6F0}
+  .rankrow.me{background:#FFE2C8;font-weight:700}
+  .rk{width:28px;text-align:center}
+  .pv{flex:1}
+  .nm{color:var(--muted);font-size:13px}
+  .rankgap{text-align:center;color:var(--muted)}
   #stats{text-align:center;font-size:10px;color:var(--muted);opacity:.7;pointer-events:none;
     padding-bottom:calc(6px + env(safe-area-inset-bottom))}
 </style>
@@ -75,7 +97,7 @@
     <div class="pill">🪙 <b id="coins">0</b></div>
     <div id="levelLabel">第 1 关</div>
     <div class="tools">
-      <button class="iconbtn" id="btnDex" title="猫咪图鉴" aria-label="猫咪图鉴">📖</button>
+      <button class="iconbtn" id="btnHome" title="首页" aria-label="返回首页">🏠</button>
       <button class="iconbtn" id="btnSound" title="声音" aria-label="声音开关">🔊</button>
       <button class="iconbtn" id="btnRestart" title="重新开始" aria-label="重新开始">↻</button>
     </div>
@@ -146,9 +168,58 @@ function levelCfg(n){
 // 卡死时把某辆车掉头（只改方向不改占位，不影响之前已开走的车），仍不行就移除它。
 // 这样开局可点的车少、遮挡链深，同时保证一定有解。
 // 颜色按求出的离场顺序分块分配（每块最多 3 色）→ 按该顺序操作槽位最多占 6 格，保证 7 格可解。
-function genLevel(n){
-  const cfg = levelCfg(n);
-  const R = mulberry32(n * 1000 + 17);
+// 每日挑战：全国同一天同一套关卡。第 1 关热身，第 2 关是难度断崖（仍保证有解）
+function dailyCfg(stage){
+  return stage === 1
+    ? {cols:6,rows:8, cars:27,colors:5,chunk:6,longP:0.15,outward:0.5, boss:false}
+    : {cols:7,rows:10,cars:57,colors:7,chunk:9,longP:0.2, outward:0.1, boss:true};
+}
+function dailySeed(dateStr, stage){ return Number(dateStr.replace(/-/g,'')) * 10 + stage; }
+
+// 求解器：模拟玩家（贪心 + 随机扰动）多次尝试，找到一次通关即证明有解
+function botSolvable(cfg, cars, tries, R){
+  const {cols, rows} = cfg;
+  const blocked = (grid, c) => {
+    const d = DIRS[c.dir]; let x=c.x+d.dx, y=c.y+d.dy;
+    while(x>=0 && y>=0 && x<cols && y<rows){ const o = grid.get(y*cols+x); if(o && o!==c) return true; x+=d.dx; y+=d.dy; }
+    return false;
+  };
+  const g0 = new Map(); cars.forEach(c => c.cells.forEach(k => g0.set(k, c)));
+  for(let t=0;t<tries;t++){
+    const grid = new Map(g0); let slots = [], ok = true;
+    while(grid.size){
+      const free = [...new Set(grid.values())].filter(c => !blocked(grid, c));
+      if(!free.length){ ok = false; break; }
+      const cnt = c => slots.filter(s => s===c.color).length;
+      const noise = t / tries * 3;
+      free.sort((a,b) => cnt(b) - cnt(a) + (R() - .5) * noise);
+      const c = free[0]; c.cells.forEach(k => grid.delete(k)); slots.push(c.color);
+      if(cnt(c) >= 3){ let k=0; slots = slots.filter(s => s!==c.color || ++k > 3); }
+      if(slots.length >= 7){ ok = false; break; }
+    }
+    if(ok) return true;
+  }
+  return false;
+}
+// 第 2 关用 4 色一组的颜色分块（更难，但不能从结构上保证有解）→ 求解器验证；验证不过就退回 3 色一组
+const dailyCache = {};
+function genDaily(dateStr, stage){
+  const key = dateStr + '#' + stage;
+  if(!dailyCache[key]) dailyCache[key] = genDailyRaw(dateStr, stage);
+  return dailyCache[key];
+}
+function genDailyRaw(dateStr, stage){
+  const seed = dailySeed(dateStr, stage);
+  if(stage === 2){
+    const hard = genLevel(0, Object.assign(dailyCfg(2), {chunk:12}), seed);
+    if(botSolvable(hard.cfg, hard.cars, 300, mulberry32(seed))) return hard;
+  }
+  return genLevel(0, dailyCfg(stage), seed);
+}
+
+function genLevel(n, cfgIn, seed){
+  const cfg = cfgIn || levelCfg(n);
+  const R = mulberry32(seed != null ? seed : n * 1000 + 17);
   const {cols, rows} = cfg;
   const occ = new Array(cols*rows).fill(null);
   const inB = (x,y) => x>=0 && y>=0 && x<cols && y<rows;
@@ -237,9 +308,29 @@ const meta = {
   dexClaimed: store.get('dexClaimed', [0,0,0,0,0,0,0]),
   gift: store.get('gift', false),
   sound: store.get('sound', true),
-  adViews: 0, interstitials: 0,
+  province: store.get('province', ''),
+  daily: store.get('daily', {date:'', stage:1, cleared:false, attempts:0, rewarded1:false}),
+  streak: store.get('streak', {last:'', count:0}),
+  contrib: store.get('contrib', {}),   // 每天为省份贡献的通关次数 {日期: 次数}
+  adViews: 0, interstitials: 0, shares: 0,
 };
-function save(){ ['level','coins','inv','dex','dexClaimed','gift','sound'].forEach(k => store.set(k, meta[k])); }
+function save(){ ['level','coins','inv','dex','dexClaimed','gift','sound','province','daily','streak','contrib'].forEach(k => store.set(k, meta[k])); }
+
+// 日期（本地时区）；调试时可用 mlgc.setToday('2026-12-01') 覆盖
+let todayOverride = '';
+function fmtDate(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function today(){ return todayOverride || fmtDate(new Date()); }
+function yesterdayOf(ds){ const [y,m,d] = ds.split('-').map(Number); return fmtDate(new Date(y, m-1, d-1)); }
+function ensureDaily(){
+  if(meta.daily.date !== today()){ meta.daily = {date: today(), stage:1, cleared:false, attempts:0, rewarded1:false}; save(); }
+  return meta.daily;
+}
+function streakAlive(){ return meta.streak.last === today() || meta.streak.last === yesterdayOf(today()) ? meta.streak.count : 0; }
+
+// 各省大致人口（百万），用于生成更可信的示例排行
+const PROV_POP = [22,14,74,35,24,42,24,31,25,85,66,61,42,45,102,99,58,66,127,50,10,32,84,39,47,4,40,25,6,7,26,7,0.7,23];
+const PROVINCES = ['北京','天津','河北','山西','内蒙古','辽宁','吉林','黑龙江','上海','江苏','浙江','安徽','福建','江西','山东','河南',
+  '湖北','湖南','广东','广西','海南','重庆','四川','贵州','云南','西藏','陕西','甘肃','青海','宁夏','新疆','香港','澳门','台湾'];
 
 // ---------- 音效 ----------
 let actx = null;
@@ -282,12 +373,14 @@ let S = null;
 let W=0, H=0, DPR=1, L=null;
 let press = null; // 长按预览
 
-function newGame(level){
-  const {cfg, cars} = genLevel(level);
+// mode: 'level' 闯关；'daily' 每日挑战（level 参数此时表示第几关：1 或 2）
+function newGame(level, mode='level'){
+  const daily = mode === 'daily';
+  const {cfg, cars} = daily ? genDaily(today(), level) : genLevel(level);
   const grid = new Array(cfg.cols*cfg.rows).fill(null);
-  S = {level, cfg, grid, cars:[], slots:[], buffer:[], buses:[], particles:[], floats:[],
-       cap:7, history:[], revives:0, over:false, total:0,
-       combo:0, lastClear:0, lastBeat:0, tutorial: level===1, extraUsed:false};
+  S = {level, mode, cfg, grid, cars:[], slots:[], buffer:[], buses:[], particles:[], floats:[],
+       cap:7, history:[], revives:0, over:false, total:0, used:{},
+       combo:0, lastClear:0, lastBeat:0, tutorial: !daily && level===1, extraUsed:false};
   S.cars = cars.map((c,i) => {
     const car = {id:i, color:c.color, dir:c.dir, len:c.len, cells:c.cells.slice(), fx:c.x, fy:c.y,
       x:0, y:0, dl:0, dw:0, ang:DIRS[c.dir].a, path:[], state:'grid', scale:0, bump:null, flash:0, bang:0};
@@ -302,6 +395,13 @@ function newGame(level){
     c.x=p.x; c.y=p.y; c.dl=d.l; c.dw=d.w;
     c.appear = performance.now() + 10*i;
   });
+  if(daily){
+    $('#levelLabel').textContent = `📅 今日挑战 ${level}/2`;
+    $('#sub').textContent = level === 1 ? '热身关 · 道具每局各限 1 次' : `⚠️ 难度断崖 · 今日通关率仅 ${mockPassRate()}%（示例）`;
+    if(level === 2) toast(`第 ${meta.daily.attempts} 次挑战 · 为${meta.province}加油！`, 2200);
+    refreshProps(); refreshStats();
+    return;
+  }
   $('#levelLabel').textContent = cfg.boss ? `👑 第 ${level} 关` : `第 ${level} 关`;
   const tips = {
     1: '点小猫车，它会朝车头方向开走',
@@ -435,6 +535,7 @@ function busDims(){ return {w: L.slotSize*3.4, h: L.slotSize*1.0, y: L.trayY - L
 
 function remaining(){ return S.cars.filter(c => c.state==='grid' || c.state==='slot' || c.state==='buffer').length; }
 function updateSub(){
+  if(S.mode === 'daily'){ if(S.level === 2) $('#sub').textContent = `⚠️ 难度断崖 · 剩余 ${remaining()} 辆车`; return; }
   if(S.level > 3 && !S.cfg.boss) $('#sub').textContent = `剩余 ${remaining()} 辆车`;
   else if(S.cfg.boss) $('#sub').textContent = `👑 Boss 关 · 剩余 ${remaining()} 辆车`;
 }
@@ -471,34 +572,52 @@ function popToBuffer(n){
 function applyProp(key){ PROPS[key].run(); refreshProps(); updateSub(); }
 function useProp(key){
   if(!S || S.over || !mask.hidden) return;
-  if(S.level < PROP_UNLOCK_LEVEL){ toast(`第 ${PROP_UNLOCK_LEVEL} 关解锁道具`); return; }
   const p = PROPS[key];
+  if(S.mode === 'daily'){
+    // 每日挑战：为了排行公平，不用库存，每种道具每局限 1 次，通过广告或分享获得
+    if(S.used[key]){ toast(`本局「${p.name}」已用过`); return; }
+    if(!p.can()){ toast(p.why); return; }
+    openDialog(`<div class="big">${p.icon}</div><h2>${p.name}</h2><p>${p.desc}<br>今日挑战中每种道具每局限用 1 次</p>
+      <button class="btn ad" id="pAd">📺 看广告使用</button>
+      <button class="btn primary" id="pShare">📤 分享求助使用</button>
+      <button class="btn ghost" id="pNo">算了</button>`);
+    const use = () => { S.used[key] = true; applyProp(key); };
+    $('#pAd').onclick = () => showRewardAd(`使用「${p.name}」`, use);
+    $('#pShare').onclick = () => shareHelp(`我在喵了个车今日挑战卡住了，帮我点一下送个「${p.name}」！`, use);
+    $('#pNo').onclick = closeDialog;
+    return;
+  }
+  if(S.level < PROP_UNLOCK_LEVEL){ toast(`第 ${PROP_UNLOCK_LEVEL} 关解锁道具`); return; }
   if(!p.can()){ toast(p.why); return; }
   if(meta.inv[key] > 0){ meta.inv[key]--; save(); applyProp(key); return; }
   openDialog(`<div class="big">${p.icon}</div><h2>${p.name}</h2><p>${p.desc}</p>
     <button class="btn ad" id="pAd">📺 看广告得 ${p.give} 个</button>
+    <button class="btn primary" id="pShare">📤 求助好友得 1 个</button>
     <button class="btn primary" id="pBuy" ${meta.coins < p.price ? 'disabled' : ''}>🪙 ${p.price} 买 1 个</button>
     <button class="btn ghost" id="pNo">算了</button>`);
   $('#pAd').onclick = () => showRewardAd(`获得 ${p.give} 个「${p.name}」`, () => {
     meta.inv[key] += p.give - 1; save(); applyProp(key); toast(`已使用 1 个，剩余 ${meta.inv[key]} 个`);
   });
+  $('#pShare').onclick = () => shareHelp(`我在喵了个车第 ${S.level} 关卡住了，帮我点一下送个「${p.name}」！`, () => applyProp(key));
   $('#pBuy').onclick = () => { meta.coins -= p.price; save(); closeDialog(); applyProp(key); refreshStats(); };
   $('#pNo').onclick = closeDialog;
 }
 function refreshProps(){
-  const locked = !S || S.level < PROP_UNLOCK_LEVEL;
+  const daily = S && S.mode === 'daily';
+  const locked = !S || (!daily && S.level < PROP_UNLOCK_LEVEL);
   document.querySelectorAll('.prop').forEach(b => {
     const key = b.dataset.prop, badge = b.querySelector('.badge');
-    b.classList.toggle('locked', locked);
+    b.classList.toggle('locked', locked || (daily && !!S.used[key]));
     if(locked){ badge.textContent = '🔒'; badge.className = 'badge count'; return; }
+    if(daily){ badge.textContent = S.used[key] ? '已用' : '1次'; badge.className = 'badge' + (S.used[key] ? ' count' : ''); return; }
     const n = meta.inv[key];
     badge.textContent = n > 0 ? n : '+';
     badge.className = 'badge' + (n > 0 ? ' count' : '');
   });
 }
 
-// ---------- 广告（原型中为模拟） ----------
-function showRewardAd(rewardText, onReward){
+// ---------- 广告 / 分享（原型中为模拟） ----------
+function showRewardAd(rewardText, onReward, onCancel=closeDialog){
   let left = 3;
   openDialog(`
     <div class="adbox"><div>📺 激励视频广告（模拟）</div><b id="adCount">${left}</b><div style="font-size:12px;opacity:.7">正式版接入 wx.createRewardedVideoAd</div></div>
@@ -508,7 +627,24 @@ function showRewardAd(rewardText, onReward){
     left--; const el = $('#adCount'); if(el) el.textContent = left;
     if(left<=0){ clearInterval(timer); meta.adViews++; refreshStats(); closeDialog(); onReward(); }
   }, 1000);
-  $('#adSkip').onclick = () => { clearInterval(timer); closeDialog(); };
+  $('#adSkip').onclick = () => { clearInterval(timer); onCancel(); };
+}
+const FRIENDS = ['小橘','阿布','奶茶','团子','芝麻','可乐','布丁','年糕'];
+function shareHelp(title, onDone, onCancel=closeDialog){
+  openDialog(`<h2>📤 分享求助</h2>
+    <div class="sharecard"><div class="sharetitle">${title}</div><div class="shareimg">🐱🚗<span>喵了个车</span></div></div>
+    <p style="font-size:12px">正式版调用 wx.shareAppMessage，好友点开卡片后由云函数记录助力</p>
+    <button class="btn ad" id="shGo">分享到群聊（模拟）</button>
+    <button class="btn ghost" id="shNo">取消</button>`);
+  $('#shGo').onclick = () => {
+    openDialog(`<div class="big">⏳</div><h2>等待好友助力…</h2><p>（模拟：好友点开卡片即助力成功）</p>`);
+    setTimeout(() => {
+      meta.shares++; refreshStats(); closeDialog();
+      toast(`好友「${FRIENDS[Math.floor(Math.random()*FRIENDS.length)]}」帮你助力成功！`);
+      onDone();
+    }, 1500);
+  };
+  $('#shNo').onclick = onCancel;
 }
 function showInterstitial(next){
   meta.interstitials++; refreshStats();
@@ -517,7 +653,7 @@ function showInterstitial(next){
   $('#isClose').onclick = () => { closeDialog(); next(); };
 }
 function refreshStats(){
-  $('#stats').textContent = `原型统计 · 激励视频 ${meta.adViews} 次 · 插屏 ${meta.interstitials} 次`;
+  $('#stats').textContent = `原型统计 · 激励视频 ${meta.adViews} 次 · 插屏 ${meta.interstitials} 次 · 分享 ${meta.shares} 次`;
   $('#coins').textContent = meta.coins;
   $('#btnSound').textContent = meta.sound ? '🔊' : '🔇';
 }
@@ -527,40 +663,147 @@ function openDialog(html){ dialog.innerHTML = html; mask.hidden = false; press =
 function closeDialog(){ mask.hidden = true; dialog.innerHTML = ''; }
 function showWin(){
   sfx.win();
+  if(S.mode === 'daily') return S.level === 1 ? showDailyWarmupWin() : showDailyWin();
   const reward = (10 + S.level * 2) * (S.cfg.boss ? 2 : 1);
   meta.coins += reward; meta.level = S.level + 1; save(); refreshStats();
   openDialog(`<div class="big">${S.cfg.boss ? '👑' : '🎉'}</div><h2>${S.cfg.boss ? 'Boss 关通关！' : '过关啦！'}</h2>
     <p>猫咪们全都坐上巴士回家了<br>获得 🪙 ${reward}</p>
     <button class="btn ad" id="dbl">📺 看广告再领 🪙 ${reward}</button>
     <button class="btn primary" id="next">下一关</button>`);
-  $('#dbl').onclick = () => showRewardAd(`再领 🪙 ${reward}`, () => { meta.coins += reward; save(); refreshStats(); goNext(); });
+  $('#dbl').onclick = () => showRewardAd(`再领 🪙 ${reward}`, () => { meta.coins += reward; save(); refreshStats(); goNext(); }, showWinAgain);
   $('#next').onclick = goNext;
 }
+function showWinAgain(){ closeDialog(); goNext(); }
 function goNext(){
   closeDialog();
   const lv = meta.level;
   if(lv > 3 && lv % 2 === 0) showInterstitial(() => newGame(lv)); else newGame(lv);
 }
+function restartCurrent(){
+  closeDialog();
+  if(S.mode === 'daily'){
+    if(S.level === 2){ meta.daily.attempts++; save(); }
+    newGame(S.level, 'daily');
+  } else newGame(S.level);
+}
 function showLose(){
-  sfx.lose();
+  if(S.loseSfx !== S.revives){ sfx.lose(); S.loseSfx = S.revives; } // 从广告/分享返回时不重复播放
+  const daily = S.mode === 'daily';
   const left = remaining();
   const pct = Math.round((1 - left / S.total) * 100);
   const title = pct >= 60 ? `只差 ${left} 辆车！` : '槽位塞满啦！';
   const tip = pct >= 60 ? `你已经完成了 ${pct}%，再坚持一下就能过关` : `已完成 ${pct}%，先挑能凑齐三辆的颜色点哦`;
   const COST = 60;
+  // 阶梯复活：看广告 → 分享求助 → （闯关模式）金币
   let btn = '';
   if(S.revives === 0) btn = '<button class="btn ad" id="revive">📺 看广告复活（移出 3 辆车）</button>';
-  else if(S.revives === 1) btn = `<button class="btn primary" id="revive" ${meta.coins < COST ? 'disabled' : ''}>🪙 ${COST} 金币复活</button>`;
+  else if(S.revives === 1) btn = '<button class="btn primary" id="revive">📤 分享求助复活</button>';
+  else if(S.revives === 2 && !daily) btn = `<button class="btn primary" id="revive" ${meta.coins < COST ? 'disabled' : ''}>🪙 ${COST} 金币复活</button>`;
   openDialog(`<div class="big">😿</div><h2>${title}</h2><p>${tip}</p>${btn}
-    <button class="btn ghost" id="retry">重新开始</button>`);
+    <button class="btn ghost" id="retry">${daily && S.level === 2 ? '再挑战一次' : '重新开始'}</button>
+    ${daily ? '<button class="btn ghost" id="home">返回首页</button>' : ''}`);
   const doRevive = () => { S.revives++; S.over = false; closeDialog(); popToBuffer(3); };
   const rv = $('#revive');
-  if(rv) rv.onclick = S.revives === 0
-    ? () => showRewardAd('复活一次', doRevive)
-    : () => { meta.coins -= COST; save(); refreshStats(); doRevive(); };
-  $('#retry').onclick = () => { closeDialog(); newGame(S.level); };
+  if(rv){
+    if(S.revives === 0) rv.onclick = () => showRewardAd('复活一次', doRevive, showLose);
+    else if(S.revives === 1) rv.onclick = () => shareHelp(
+      daily ? `我在喵了个车今日挑战第 2 关只差 ${left} 辆车，快来帮我！` : `我在喵了个车第 ${S.level} 关只差 ${left} 辆车，快来帮我！`,
+      doRevive, showLose);
+    else rv.onclick = () => { meta.coins -= COST; save(); refreshStats(); doRevive(); };
+  }
+  $('#retry').onclick = restartCurrent;
+  const hm = $('#home'); if(hm) hm.onclick = showHome;
 }
-function showDex(){
+
+// ---------- 每日挑战 ----------
+function mockPassRate(){ const R = mulberry32(dailySeed(today(), 7)); return (0.8 + R()*2.4).toFixed(1); }
+function mockRanking(){
+  // 示例数据：按日期生成固定的各省通关人数，再加上玩家自己的贡献；正式版由云开发汇总
+  const R = mulberry32(dailySeed(today(), 9));
+  const rows = PROVINCES.map((p,i) => ({p, n: Math.floor(PROV_POP[i] * (60 + R()*140))}));
+  const mine = rows.find(r => r.p === meta.province);
+  if(mine) mine.n += (meta.contrib[today()] || 0);
+  return rows.sort((a,b) => b.n - a.n);
+}
+function provinceRank(){ return mockRanking().findIndex(r => r.p === meta.province) + 1; }
+function startDaily(){
+  const d = ensureDaily();
+  if(!meta.province){ showProvincePicker(startDaily); return; }
+  closeDialog();
+  if(!d.cleared && d.stage === 2){ d.attempts++; save(); }
+  newGame(d.cleared ? 1 : d.stage, 'daily');
+}
+function showDailyWarmupWin(){
+  const d = ensureDaily(), first = !d.rewarded1;
+  if(first){ d.rewarded1 = true; meta.coins += 20; }
+  if(!d.cleared){ d.stage = 2; }
+  save(); refreshStats();
+  openDialog(`<div class="big">🔥</div><h2>热身完成！</h2>
+    <p>${first ? '获得 🪙 20<br>' : ''}第 2 关是今天真正的挑战<br>全国通关率仅 ${mockPassRate()}%（示例）</p>
+    <button class="btn primary" id="go2">进入第 2 关</button>
+    <button class="btn ghost" id="home">返回首页</button>`);
+  $('#go2').onclick = () => { closeDialog(); meta.daily.attempts++; save(); newGame(2, 'daily'); };
+  $('#home').onclick = showHome;
+}
+function showDailyWin(){
+  const d = ensureDaily(), first = !d.cleared;
+  meta.contrib[today()] = (meta.contrib[today()] || 0) + 1;
+  if(first){
+    d.cleared = true; meta.coins += 100;
+    const s = meta.streak;
+    meta.streak = {last: today(), count: s.last === yesterdayOf(today()) ? s.count + 1 : (s.last === today() ? s.count : 1)};
+  }
+  save(); refreshStats();
+  renderDailyWin(first);
+}
+function renderDailyWin(first){
+  const attempts = Math.max(1, meta.daily.attempts);
+  openDialog(`<div class="big">🏆</div><h2>今日挑战通关！</h2>
+    <p>${first ? `第 ${attempts} 次挑战成功 · 获得 🪙 100<br>连续通关 ${meta.streak.count} 天<br>` : '又通关了一次！<br>'}
+    为 <b>${meta.province}</b> 贡献 1 次通关，当前排名第 ${provinceRank()}（示例）</p>
+    <button class="btn ad" id="brag">📤 炫耀一下</button>
+    <button class="btn primary" id="rank">🏆 查看省份排行</button>
+    <button class="btn ghost" id="home">返回首页</button>`);
+  $('#brag').onclick = () => shareHelp(`我第 ${attempts} 次就通关了喵了个车今日挑战，为${meta.province}争光！你敢来试试吗？`, showHome, () => renderDailyWin(first));
+  $('#rank').onclick = () => showRanking(showHome);
+  $('#home').onclick = showHome;
+}
+function showProvincePicker(then){
+  openDialog(`<h2>选择你的战队</h2><p>今日挑战通关后，会为你的省份贡献通关人数</p>
+    <div class="provgrid">${PROVINCES.map(p => `<button class="prov ${p===meta.province?'on':''}" data-p="${p}">${p}</button>`).join('')}</div>
+    <button class="btn ghost" id="provNo">取消</button>`);
+  dialog.querySelectorAll('.prov').forEach(b => b.onclick = () => { meta.province = b.dataset.p; save(); then(); });
+  $('#provNo').onclick = showHome;
+}
+function showRanking(back=closeDialog){
+  if(!meta.province){ showProvincePicker(() => showRanking(back)); return; }
+  const rows = mockRanking(), myIdx = rows.findIndex(r => r.p === meta.province);
+  const line = (r, i) => `<div class="rankrow ${r.p===meta.province?'me':''}"><span class="rk">${i<3 ? ['🥇','🥈','🥉'][i] : i+1}</span><span class="pv">${r.p}</span><span class="nm">${r.n.toLocaleString()} 人</span></div>`;
+  let html = rows.slice(0, 10).map(line).join('');
+  if(myIdx >= 10) html += `<div class="rankgap">…</div>` + line(rows[myIdx], myIdx);
+  openDialog(`<h2>🏆 今日省份排行</h2><p>按今日挑战通关人数 · ${today()}<br><span style="font-size:11px">示例数据，正式版由微信云开发汇总</span></p>
+    <div class="rank">${html}</div>
+    <button class="btn ghost" id="provChange">更换战队（当前：${meta.province}）</button>
+    <button class="btn primary" id="rankClose">返回</button>`);
+  $('#provChange').onclick = () => showProvincePicker(() => showRanking(back));
+  $('#rankClose').onclick = back;
+}
+
+// ---------- 首页 ----------
+function showHome(){
+  const d = ensureDaily(), st = streakAlive();
+  const status = d.cleared ? '✅ 今日已通关，可再玩' : (d.stage === 2 ? `已到第 2 关 · 挑战 ${d.attempts} 次` : '每天一套新关卡，全国同题');
+  openDialog(`<div class="logo">🐱🚗</div><h2>喵了个车</h2><p>把小猫车开出停车场，凑齐三辆坐巴士回家</p>
+    <button class="btn primary homebtn" id="hLevel">🚗 闯关模式<small>第 ${meta.level} 关</small></button>
+    <button class="btn ad homebtn" id="hDaily">📅 今日挑战<small>${status}${st ? ` · 🔥连续 ${st} 天` : ''}</small></button>
+    <div class="homerow"><button class="btn ghost" id="hRank">🏆 省份排行</button><button class="btn ghost" id="hDex">📖 图鉴</button></div>
+    <p class="mini">${meta.province ? `你的战队：${meta.province}` : '首次进入今日挑战时选择你的省份'}</p>`);
+  $('#hLevel').onclick = () => { closeDialog(); newGame(meta.level); };
+  $('#hDaily').onclick = startDaily;
+  $('#hRank').onclick = () => showRanking(showHome);
+  $('#hDex').onclick = () => showDex(showHome);
+}
+function showDex(back=closeDialog){
   const DEX_MAX = 30, DEX_REWARD = 50;
   const cards = CAT_NAMES.map((name, i) => {
     const n = meta.dex[i], seen = n > 0, max = n >= DEX_MAX;
@@ -574,10 +817,10 @@ function showDex(){
   openDialog(`<h2>📖 猫咪图鉴</h2><p>每送 ${DEX_MAX} 只同种猫咪回家，可领 🪙 ${DEX_REWARD}</p>
     <div class="dex">${cards}</div>
     ${claimable.length ? `<button class="btn primary" id="claim">领取 🪙 ${claimable.length * DEX_REWARD}</button>` : ''}
-    <button class="btn ghost" id="dexClose">关闭</button>`);
+    <button class="btn ghost" id="dexClose">返回</button>`);
   const cl = $('#claim');
-  if(cl) cl.onclick = () => { claimable.forEach(i => meta.dexClaimed[i] = 1); meta.coins += claimable.length*DEX_REWARD; save(); refreshStats(); showDex(); };
-  $('#dexClose').onclick = closeDialog;
+  if(cl) cl.onclick = () => { claimable.forEach(i => meta.dexClaimed[i] = 1); meta.coins += claimable.length*DEX_REWARD; save(); refreshStats(); showDex(back); };
+  $('#dexClose').onclick = back;
 }
 
 // ---------- 特效 ----------
@@ -613,8 +856,8 @@ canvas.addEventListener('pointerup', () => {
 canvas.addEventListener('pointercancel', () => { press = null; });
 canvas.addEventListener('pointerleave', () => { press = null; });
 document.querySelectorAll('.prop').forEach(b => b.addEventListener('click', () => useProp(b.dataset.prop)));
-$('#btnRestart').addEventListener('click', () => { if(mask.hidden) newGame(S.level); });
-$('#btnDex').addEventListener('click', () => { if(mask.hidden) showDex(); });
+$('#btnRestart').addEventListener('click', () => { if(mask.hidden) restartCurrent(); });
+$('#btnHome').addEventListener('click', () => { if(mask.hidden) showHome(); });
 $('#btnSound').addEventListener('click', () => { meta.sound = !meta.sound; save(); refreshStats(); });
 window.addEventListener('resize', resize);
 
@@ -888,9 +1131,10 @@ let drawOnly = false;
 resize();
 newGame(meta.level);
 requestAnimationFrame(frame);
+showHome();
 
 // 调试入口：控制台里 mlgc.go(5) 跳关
-window.mlgc = { go(n){ closeDialog(); newGame(n); }, state: () => S, meta, freeCars: () => freeCars(), blockerOf: c => blockerOf(c),
+window.mlgc = { go(n){ closeDialog(); newGame(n); }, daily(stage){ ensureDaily(); closeDialog(); newGame(stage, 'daily'); }, setToday(d){ todayOverride = d; }, state: () => S, meta, freeCars: () => freeCars(), blockerOf: c => blockerOf(c),
   // 自动化测试用：页面在后台时 rAF 不触发，可手动推进若干毫秒
   pump(ms){ const end = performance.now() + ms; while(performance.now() < end){ const s = performance.now(); while(performance.now() - s < 16){} drawOnly = true; frame(performance.now()); drawOnly = false; } } };
 })();
