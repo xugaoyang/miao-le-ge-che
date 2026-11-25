@@ -12,16 +12,16 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
-  #app{position:relative;height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;
+  #app{transition:background .4s;position:relative;height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;
     background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
   header{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 4px;gap:6px}
   .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;
     box-shadow:0 2px 0 rgba(0,0,0,.08);white-space:nowrap;flex:none}
-  #levelLabel{font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1;text-align:center}
+  #levelLabel{color:var(--pageInk,var(--ink));font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1;text-align:center}
   .tools{display:flex;gap:6px}
   .iconbtn{border:0;background:var(--card);border-radius:12px;width:36px;height:36px;font-size:17px;
     box-shadow:0 2px 0 rgba(0,0,0,.1);cursor:pointer;padding:0}
-  #sub{text-align:center;font-size:12px;color:var(--muted);min-height:16px;padding:0 12px}
+  #sub{text-align:center;font-size:12px;color:var(--pageMuted,var(--muted));min-height:16px;padding:0 12px}
   #stage{flex:1;position:relative;min-height:0}
   canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
   #props{display:flex;justify-content:space-around;padding:8px 12px 6px}
@@ -38,7 +38,7 @@
   .badge:empty{display:none}
   #toast{position:absolute;left:50%;top:56px;transform:translateX(-50%);background:rgba(59,47,47,.92);color:#fff;
     padding:8px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;
-    white-space:nowrap;z-index:5}
+    white-space:nowrap;z-index:5;max-width:94%;overflow:hidden;text-overflow:ellipsis}
   #toast.show{opacity:1}
   .mask{position:absolute;inset:0;background:rgba(40,30,25,.55);display:flex;align-items:center;justify-content:center;z-index:10;padding:16px}
   .mask[hidden]{display:none}
@@ -99,14 +99,46 @@
   .skillrow small{color:var(--muted);font-size:11px}
   .skillrow.cur{background:#FFE2C8;font-weight:700}
   .skillrow.future{opacity:.5}
-  #stats{text-align:center;font-size:10px;color:var(--muted);opacity:.7;pointer-events:none;
+  .coin{display:inline-block;width:1em;height:1em;border-radius:50%;vertical-align:-0.14em;font-style:normal;
+    background:radial-gradient(circle at 35% 32%,#FFE58A 0,#F5B700 55%,#D99400 100%);box-shadow:inset 0 0 0 1.5px #C98800}
+  .homegrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .homegrid .btn{margin:0;position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;padding:11px 6px;font-size:15px}
+  .homegrid small{font-size:11px;font-weight:500;color:var(--muted)}
+  .dot{position:absolute;top:8px;right:10px;width:9px;height:9px;border-radius:50%;background:var(--accent2)}
+  .stars{font-size:46px;letter-spacing:6px;line-height:1.1}
+  .stars span{color:#E7DCCF}
+  .stars span.on{color:#FFC21A;text-shadow:0 2px 0 #E09A00}
+  .hint{background:#F3ECE4;border-radius:12px;padding:9px;font-size:13px;margin:-4px 0 4px}
+  .hint.ok{background:#FFF1C9;font-weight:700}
+  .town{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px;border-radius:16px;margin:8px 0}
+  .tile{background:rgba(255,255,255,.55);border-radius:12px;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .tile .ti{font-size:34px;filter:grayscale(1);opacity:.3}
+  .tile.done{background:rgba(255,255,255,.9)}
+  .tile.done .ti{filter:none;opacity:1}
+  .tile.next{outline:2px dashed var(--accent)}
+  .tile small{font-size:11px;color:var(--muted)}
+  .tile.pop .ti{animation:pop .6s}
+  @keyframes pop{0%{transform:scale(.3)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+  .ward{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+  .wcard{border:2px solid transparent;background:#FBF6F0;border-radius:14px;padding:8px 4px;display:flex;flex-direction:column;
+    align-items:center;gap:2px;cursor:pointer;font:inherit;color:inherit}
+  .wcard.on{border-color:var(--accent);background:#FFF1E4}
+  .wcard b{font-size:13px}
+  .wcard small{font-size:11px;color:var(--muted)}
+  canvas.carpv{position:static;width:64px;height:64px;display:block}
+  canvas.carpv.long{width:150px;height:76px;margin:6px auto}
+  .tag{font-style:normal;font-size:11px;border-radius:999px;padding:2px 8px;background:#E8F1FF;color:#2F6FD6;margin-top:2px}
+  .tag.on{background:var(--accent);color:#fff}
+  .tag.lock{background:#F0E8DF;color:var(--muted)}
+  .dialog{color:#3B2F2F}
+  #stats{text-align:center;font-size:10px;color:var(--pageMuted,var(--muted));opacity:.7;pointer-events:none;
     padding-bottom:calc(6px + env(safe-area-inset-bottom))}
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <div class="pill">🪙 <b id="coins">0</b></div>
+    <div class="pill"><i class="coin"></i> <b id="coins">0</b></div>
     <div id="levelLabel">第 1 关</div>
     <div class="tools">
       <button class="iconbtn" id="btnHome" title="首页" aria-label="返回首页">🏠</button>
@@ -143,6 +175,8 @@ const DIRS = [
   {dx:-1,dy:0,  a:-Math.PI/2},   // 左
 ];
 const BUFFER_CAP = 6;
+// 金币图标用 CSS 绘制：部分手机系统不支持金币 emoji，会显示成灰色
+const COIN = '<i class="coin"></i>';
 const PROP_UNLOCK_LEVEL = 3;
 
 function mulberry32(seed){
@@ -326,9 +360,13 @@ const meta = {
   contrib: store.get('contrib', {}),   // 每天为省份贡献的通关次数 {日期: 次数}
   skins: store.get('skins', {owned:[], on:[]}),
   tyDate: store.get('tyDate', ''),
+  stars: store.get('stars', 0),
+  town: store.get('town', {area:0, built:[]}),
+  winStreak: store.get('winStreak', 0),
+  seenLong: store.get('seenLong', false),
   adViews: 0, interstitials: 0, shares: 0,
 };
-function save(){ ['level','coins','inv','dex','dexClaimed','gift','sound','province','daily','streak','contrib','skins','tyDate'].forEach(k => store.set(k, meta[k])); }
+function save(){ ['level','coins','inv','dex','dexClaimed','gift','sound','province','daily','streak','contrib','skins','tyDate','stars','town','winStreak','seenLong'].forEach(k => store.set(k, meta[k])); }
 
 // 日期（本地时区）；调试时可用 mlgc.setToday('2026-12-01') 覆盖
 let todayOverride = '';
@@ -373,12 +411,13 @@ const sfx = {
 
 // ---------- DOM ----------
 const $ = s => document.querySelector(s);
-const canvas = $('#c'), ctx = canvas.getContext('2d');
+const canvas = $('#c');
+let ctx = canvas.getContext('2d');
 const stage = $('#stage');
 const mask = $('#mask'), dialog = $('#dialog');
 let toastTimer = 0;
 function toast(msg, ms=1800){
-  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  const t=$('#toast'); t.innerHTML=msg; t.classList.add('show');
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'), ms);
 }
 
@@ -404,7 +443,9 @@ function newGame(level, mode='level'){
   });
   S.total = S.cars.length;
   press = null;
+  applyTheme();
   layout();
+  maybeLongGuide();
   S.cars.forEach((c,i) => {
     const p = homeOf(c), d = dimsOf(c);
     c.x=p.x; c.y=p.y; c.dl=d.l; c.dw=d.w;
@@ -585,7 +626,7 @@ function popToBuffer(n){
   moved.forEach(c => { c.state='buffer'; c.path=[]; S.buffer.push(c); });
   S.history = S.history.filter(h => h.state==='slot');
 }
-function applyProp(key){ PROPS[key].run(); refreshProps(); updateSub(); }
+function applyProp(key){ S.assisted = true; PROPS[key].run(); refreshProps(); updateSub(); }
 function useProp(key){
   if(!S || S.over || !mask.hidden) return;
   const p = PROPS[key];
@@ -610,7 +651,7 @@ function useProp(key){
   openDialog(`<div class="big">${p.icon}</div><h2>${p.name}</h2><p>${p.desc}</p>
     <button class="btn ad" id="pAd">📺 看广告得 ${p.give} 个</button>
     <button class="btn primary" id="pShare">📤 求助好友得 1 个</button>
-    <button class="btn primary" id="pBuy" ${meta.coins < p.price ? 'disabled' : ''}>🪙 ${p.price} 买 1 个</button>
+    <button class="btn primary" id="pBuy" ${meta.coins < p.price ? 'disabled' : ''}>${COIN} ${p.price} 买 1 个</button>
     <button class="btn ghost" id="pNo">算了</button>`);
   $('#pAd').onclick = () => showRewardAd(`获得 ${p.give} 个「${p.name}」`, () => {
     meta.inv[key] += p.give - 1; save(); applyProp(key); toast(`已使用 1 个，剩余 ${meta.inv[key]} 个`);
@@ -681,14 +722,7 @@ function closeDialog(){ mask.hidden = true; dialog.innerHTML = ''; }
 function showWin(){
   sfx.win();
   if(S.mode === 'daily') return S.level === 1 ? showDailyWarmupWin() : showDailyWin();
-  const reward = (10 + S.level * 2) * (S.cfg.boss ? 2 : 1);
-  meta.coins += reward; meta.level = S.level + 1; save(); refreshStats();
-  openDialog(`<div class="big">${S.cfg.boss ? '👑' : '🎉'}</div><h2>${S.cfg.boss ? 'Boss 关通关！' : '过关啦！'}</h2>
-    <p>猫咪们全都坐上巴士回家了<br>获得 🪙 ${reward}</p>
-    <button class="btn ad" id="dbl">📺 看广告再领 🪙 ${reward}</button>
-    <button class="btn primary" id="next">下一关</button>`);
-  $('#dbl').onclick = () => showRewardAd(`再领 🪙 ${reward}`, () => { meta.coins += reward; save(); refreshStats(); goNext(); }, showWinAgain);
-  $('#next').onclick = goNext;
+  showLevelWin();
 }
 function showWinAgain(){ closeDialog(); goNext(); }
 function goNext(){
@@ -701,7 +735,11 @@ function restartCurrent(){
   if(S.mode === 'daily'){
     if(S.level === 2){ meta.daily.attempts++; save(); }
     newGame(S.level, 'daily');
-  } else newGame(S.level);
+  } else {
+    const played = S.over || S.cars.some(c => c.state !== 'grid');
+    if(played && meta.winStreak > 0){ toast(`🔥${meta.winStreak} 连胜已中断`); meta.winStreak = 0; save(); }
+    newGame(S.level);
+  }
 }
 function showLose(){
   if(S.loseSfx !== S.revives){ sfx.lose(); S.loseSfx = S.revives; } // 从广告/分享返回时不重复播放
@@ -716,13 +754,13 @@ function showLose(){
   const matcha = S.mode === 'level' && S.matchaAvail ? '<button class="btn ad" id="matcha">🍵 抹茶的佛系复活（免费）</button>' : '';
   if(S.revives === 0) btn = '<button class="btn ad" id="revive">📺 看广告复活（移出 3 辆车）</button>';
   else if(S.revives === 1) btn = '<button class="btn primary" id="revive">📤 分享求助复活</button>';
-  else if(S.revives === 2 && !daily) btn = `<button class="btn primary" id="revive" ${meta.coins < COST ? 'disabled' : ''}>🪙 ${COST} 金币复活</button>`;
-  openDialog(`<div class="big">😿</div><h2>${title}</h2><p>${tip}</p>${matcha}${btn}
+  else if(S.revives === 2 && !daily) btn = `<button class="btn primary" id="revive" ${meta.coins < COST ? 'disabled' : ''}>${COIN} ${COST} 金币复活</button>`;
+  openDialog(`<div class="big">😿</div><h2>${title}</h2><p>${tip}${!daily && meta.winStreak >= 2 ? `<br><b style="color:#EF4F4F">重新开始将中断 🔥${meta.winStreak} 连胜！</b>` : ''}</p>${matcha}${btn}
     <button class="btn ghost" id="retry">${daily && S.level === 2 ? '再挑战一次' : '重新开始'}</button>
     ${daily ? '<button class="btn ghost" id="home">返回首页</button>' : ''}`);
   const doRevive = () => { S.revives++; S.over = false; closeDialog(); popToBuffer(3); };
   const mt = $('#matcha');
-  if(mt) mt.onclick = () => { S.matchaAvail = false; S.over = false; closeDialog(); popToBuffer(3); toast('🍵 抹茶：慢慢来，不着急～'); };
+  if(mt) mt.onclick = () => { S.matchaAvail = false; S.matchaUsed = true; S.over = false; closeDialog(); popToBuffer(3); toast('🍵 抹茶：慢慢来，不着急～'); };
   const rv = $('#revive');
   if(rv){
     if(S.revives === 0) rv.onclick = () => showRewardAd('复活一次', doRevive, showLose);
@@ -759,7 +797,7 @@ function showDailyWarmupWin(){
   if(!d.cleared){ d.stage = 2; }
   save(); refreshStats();
   openDialog(`<div class="big">🔥</div><h2>热身完成！</h2>
-    <p>${first ? '获得 🪙 20<br>' : ''}第 2 关是今天真正的挑战<br>全国通关率仅 ${mockPassRate()}%（示例）</p>
+    <p>${first ? `获得 ${COIN} 20<br>` : ''}第 2 关是今天真正的挑战<br>全国通关率仅 ${mockPassRate()}%（示例）</p>
     <button class="btn primary" id="go2">进入第 2 关</button>
     <button class="btn ghost" id="home">返回首页</button>`);
   $('#go2').onclick = () => { closeDialog(); meta.daily.attempts++; save(); newGame(2, 'daily'); };
@@ -779,7 +817,7 @@ function showDailyWin(){
 function renderDailyWin(first){
   const attempts = Math.max(1, meta.daily.attempts);
   openDialog(`<div class="big">🏆</div><h2>今日挑战通关！</h2>
-    <p>${first ? `第 ${attempts} 次挑战成功 · 获得 🪙 100<br>连续通关 ${meta.streak.count} 天<br>` : '又通关了一次！<br>'}
+    <p>${first ? `第 ${attempts} 次挑战成功 · 获得 ${COIN} 100<br>连续通关 ${meta.streak.count} 天<br>` : '又通关了一次！<br>'}
     为 <b>${meta.province}</b> 贡献 1 次通关，当前排名第 ${provinceRank()}（示例）</p>
     <button class="btn ad" id="brag">📤 炫耀一下</button>
     <button class="btn primary" id="rank">🏆 查看省份排行</button>
@@ -811,18 +849,212 @@ function showRanking(back=closeDialog){
 
 // ---------- 首页 ----------
 function showHome(){
-  const d = ensureDaily(), st = streakAlive();
+  const d = ensureDaily(), st = streakAlive(), th = currentTheme();
   const status = d.cleared ? '✅ 今日已通关，可再玩' : (d.stage === 2 ? `已到第 2 关 · 挑战 ${d.attempts} 次` : '每天一套新关卡，全国同题');
-  openDialog(`<div class="logo">🐱🚗</div><h2>喵了个车</h2><p>把小猫车开出停车场，凑齐三辆坐巴士回家</p>
-    <button class="btn primary homebtn" id="hLevel">🚗 闯关模式<small>第 ${meta.level} 关</small></button>
+  const canBuild = townNext() && meta.stars >= townNext().cost;
+  const skinCount = meta.skins.on.filter(i => skinOwned(i)).length;
+  openDialog(`<div class="logo">🐱🚗</div><h2>喵了个车</h2>
+    <p class="mini" style="margin:2px 0 10px!important">今日主题：${th.icon} ${th.name}（每天 0 点更换）</p>
+    <button class="btn primary homebtn" id="hLevel">🚗 闯关模式<small>第 ${meta.level} 关${meta.winStreak >= 2 ? ` · 🔥${meta.winStreak} 连胜中` : ''}</small></button>
     <button class="btn ad homebtn" id="hDaily">📅 今日挑战<small>${status}${st ? ` · 🔥连续 ${st} 天` : ''}</small></button>
-    <div class="homerow"><button class="btn ghost" id="hRank">🏆 省份排行</button><button class="btn ghost" id="hDex">📖 图鉴</button></div>
+    <div class="homegrid">
+      <button class="btn ghost" id="hTown">🏘️ 猫咪小镇<small>⭐ ${meta.stars}</small>${canBuild ? '<em class="dot"></em>' : ''}</button>
+      <button class="btn ghost" id="hWard">🎨 装扮<small>${skinCount ? `已穿 ${skinCount} 件` : '还没有皮肤'}</small></button>
+      <button class="btn ghost" id="hRank">🏆 省份排行</button>
+      <button class="btn ghost" id="hDex">📖 图鉴</button>
+    </div>
     <p class="mini">${meta.province ? `你的战队：${meta.province}` : '首次进入今日挑战时选择你的省份'}</p>`);
   $('#hLevel').onclick = () => { closeDialog(); newGame(meta.level); };
   $('#hDaily').onclick = startDaily;
+  $('#hTown').onclick = () => showTown(showHome);
+  $('#hWard').onclick = () => showWardrobe(showHome);
   $('#hRank').onclick = () => showRanking(showHome);
   $('#hDex').onclick = () => showDex(showHome);
 }
+
+// ---------- 每日主题（7 套轮换） ----------
+const THEMES = [
+  {name:'奶油小屋', icon:'🧁', bg:'#FFF4E6', bg2:'#FFE7CC', ink:'#3B2F2F', muted:'#8A7563',
+   frame:'#EADFD1', lot:'#F6EFE6', line:'#E3D5C3', tray:'#7A5C48', slot:'#5E4434', amb:'✨', deco:['🧁','🍪','☕']},
+  {name:'樱花街道', icon:'🌸', bg:'#FFF0F5', bg2:'#FFDDE9', ink:'#4A2C38', muted:'#9A6B7E',
+   frame:'#F3CFDB', lot:'#FFF7FA', line:'#F0D3DE', tray:'#8C5A6E', slot:'#6E4456', amb:'🌸', deco:['🌸','🏮','🌷','🍡']},
+  {name:'海边沙滩', icon:'🏖️', bg:'#E3F6FF', bg2:'#FFF0D2', ink:'#23404F', muted:'#5F7F8F',
+   frame:'#F0DBB0', lot:'#FFF8E8', line:'#EAD7AE', tray:'#3E7CA6', slot:'#2F5F80', amb:'🫧', deco:['🌴','🐚','⛱️','🦀']},
+  {name:'秋日枫林', icon:'🍁', bg:'#FFF2E0', bg2:'#FFDDBB', ink:'#4A2E1C', muted:'#9A6F52',
+   frame:'#EAC9A2', lot:'#FFF8EE', line:'#E9D2B5', tray:'#8A4B2A', slot:'#6B371D', amb:'🍁', deco:['🍁','🍄','🌰','🦔']},
+  {name:'雪国小镇', icon:'⛄', bg:'#EEF5FF', bg2:'#D8E8F8', ink:'#26354A', muted:'#62748C',
+   frame:'#CFDDEE', lot:'#F7FBFF', line:'#D6E2F0', tray:'#4A5D7A', slot:'#34445C', amb:'❄️', deco:['⛄','🎄','🦌','❄️']},
+  {name:'森林野餐', icon:'🌳', bg:'#EFFBEA', bg2:'#D8F0CB', ink:'#2C4220', muted:'#628052',
+   frame:'#C8E2B8', lot:'#FAFFF5', line:'#D6EAC9', tray:'#5C7A3A', slot:'#435C28', amb:'🍃', deco:['🌳','🧺','🌼','🐝']},
+  {name:'星空夜市', icon:'🌙', bg:'#2E3260', bg2:'#191C3A', ink:'#F5F0FF', muted:'#B9B4D8',
+   frame:'#22264A', lot:'#3A3F6E', line:'#4A5085', tray:'#14162E', slot:'#0E1022', amb:'✨', deco:['🌙','🏮','⭐','🎐']},
+];
+let themeOverride = -1;
+function dayNumber(ds){ const [y,m,d] = ds.split('-').map(Number); return Math.floor(Date.UTC(y, m-1, d) / 86400000); }
+function currentTheme(){ return THEMES[themeOverride >= 0 ? themeOverride : dayNumber(today()) % THEMES.length]; }
+let appliedTheme = null, ambient = [];
+function applyTheme(){
+  const th = currentTheme();
+  if(appliedTheme === th) return;
+  appliedTheme = th;
+  const app = $('#app');
+  app.style.setProperty('--bg', th.bg); app.style.setProperty('--bg2', th.bg2);
+  app.style.setProperty('--pageInk', th.ink); app.style.setProperty('--pageMuted', th.muted);
+  document.body.style.background = th.bg2;
+  ambient = [];
+}
+// 背景装饰：棋盘上方空白处摆放主题物件 + 缓慢飘落的氛围粒子（画在棋盘下层）
+function drawScenery(now, dt){
+  const th = currentTheme();
+  if(ambient.length < 10 && Math.random() < dt * 3){
+    ambient.push({x: Math.random()*W, y: -20, vy: 14 + Math.random()*18, sway: Math.random()*Math.PI*2, size: 12 + Math.random()*8});
+  }
+  ctx.save(); ctx.fillStyle = '#000'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.globalAlpha = 0.45;
+  for(const p of ambient){
+    p.y += p.vy*dt; p.sway += dt;
+    ctx.font = `${Math.round(p.size)}px sans-serif`;
+    ctx.fillText(th.amb, p.x + Math.sin(p.sway)*12, p.y);
+  }
+  ambient = ambient.filter(p => p.y < H + 20);
+  const top = L.by - 14;
+  if(top > 34){
+    ctx.globalAlpha = 0.9;
+    const R = mulberry32(dayNumber(today()));
+    const n = Math.min(6, Math.floor(W / 64));
+    for(let i=0;i<n;i++){
+      const x = (i + 0.5) * W / n + (R() - .5) * 20;
+      const y = Math.max(20, top - 10 - R() * Math.min(60, top - 30));
+      ctx.font = `${Math.round(22 + R()*10)}px sans-serif`;
+      ctx.fillText(th.deco[i % th.deco.length], x, y + Math.sin(now/600 + i) * 2);
+    }
+  }
+  ctx.restore();
+}
+
+// ---------- 连胜与星级 ----------
+function streakMult(n){ return n >= 6 ? 2 : n >= 4 ? 1.5 : n >= 2 ? 1.2 : 1; }
+function levelStars(){ return (S.revives > 0 || S.matchaUsed) ? 1 : (S.assisted ? 2 : 3); }
+function showLevelWin(){
+  const stars = levelStars();
+  meta.winStreak++;
+  const mult = streakMult(meta.winStreak);
+  const base = (10 + S.level * 2) * (S.cfg.boss ? 2 : 1);
+  const reward = Math.round(base * mult);
+  meta.coins += reward; meta.stars += stars; meta.level = S.level + 1; save(); refreshStats();
+  const nxt = townNext();
+  const townLine = !nxt ? '' : meta.stars >= nxt.cost
+    ? `<div class="hint ok">🏘️ 星星够了，可以建造 ${nxt.icon} ${nxt.name}！</div>`
+    : `<div class="hint">🏘️ 再攒 ⭐${nxt.cost - meta.stars} 就能建造 ${nxt.icon} ${nxt.name}</div>`;
+  const starTip = stars === 3 ? '完美通关！' : stars === 2 ? '不用道具可得 3 星' : '不复活可得 2 星';
+  openDialog(`<div class="stars">${[1,2,3].map(k => `<span class="${k <= stars ? 'on' : ''}">★</span>`).join('')}</div>
+    <h2>${S.cfg.boss ? 'Boss 关通关！' : '过关啦！'}</h2>
+    <p>${starTip} · 获得 ⭐${stars}<br>获得 ${COIN} ${reward}${mult > 1 ? `（🔥${meta.winStreak} 连胜 ×${mult}）` : ''}</p>
+    ${townLine}
+    <button class="btn ad" id="dbl">📺 看广告再领 ${COIN} ${reward}</button>
+    <button class="btn primary" id="next">下一关</button>
+    ${nxt && meta.stars >= nxt.cost ? '<button class="btn ghost" id="goTown">🏘️ 去小镇建造</button>' : ''}`);
+  $('#dbl').onclick = () => showRewardAd(`再领 ${COIN} ${reward}`, () => { meta.coins += reward; save(); refreshStats(); goNext(); }, showWinAgain);
+  $('#next').onclick = goNext;
+  const gt = $('#goTown'); if(gt) gt.onclick = () => showTown(goNext);
+}
+
+// ---------- 猫咪小镇：用星星建造，攒满一个区域解锁下一个 ----------
+const TOWN = [
+  {name:'猫咪小镇', bg:'linear-gradient(160deg,#FFE9C7,#FFD3A8)', reward:200, items:[
+    ['🏠','猫窝',3],['🐟','小鱼铺',4],['🥛','牛奶站',5],['🧶','毛线店',6],['🌳','猫爬架公园',7],['⛲','喷泉广场',8]]},
+  {name:'海边码头', bg:'linear-gradient(160deg,#CFF0FF,#FFF0CC)', reward:300, items:[
+    ['⛵','小帆船',6],['🦀','螃蟹餐厅',7],['🏖️','沙滩椅',8],['🎣','钓鱼台',9],['🗼','灯塔',10],['🎡','摩天轮',12]]},
+  {name:'雪山温泉', bg:'linear-gradient(160deg,#E8F2FF,#CFE0F5)', reward:500, items:[
+    ['🛷','雪橇',8],['⛄','雪人',9],['🍵','茶屋',10],['♨️','温泉',11],['🏔️','观景台',12],['🏯','天守阁',15]]},
+];
+function townNext(){
+  const a = TOWN[meta.town.area]; if(!a) return null;
+  const i = meta.town.built.length; if(i >= a.items.length) return null;
+  const [icon, name, cost] = a.items[i];
+  return {icon, name, cost};
+}
+function showTown(back=closeDialog){
+  const a = TOWN[meta.town.area];
+  if(!a){
+    openDialog(`<div class="big">🏙️</div><h2>小镇全部建成！</h2><p>新区域敬请期待</p><button class="btn ghost" id="tBack">返回</button>`);
+    $('#tBack').onclick = back; return;
+  }
+  const built = meta.town.built.length, nxt = townNext();
+  const tiles = a.items.map(([icon, name, cost], i) => {
+    const done = i < built, isNext = i === built;
+    return `<div class="tile ${done ? 'done' : ''} ${isNext ? 'next' : ''}">
+      <span class="ti">${icon}</span><small>${done ? name : isNext ? `⭐${cost}` : '🔒'}</small></div>`;
+  }).join('');
+  openDialog(`<h2>🏘️ ${a.name}</h2><p>区域 ${meta.town.area + 1}/${TOWN.length} · 已建 ${built}/${a.items.length} · 建完奖励 ${COIN} ${a.reward}</p>
+    <div class="town" style="background:${a.bg}">${tiles}</div>
+    <p class="mini">闯关通关得 1–3 颗星：过关 1 星，不复活 2 星，不用道具也不复活 3 星</p>
+    <button class="btn primary" id="build" ${meta.stars >= nxt.cost ? '' : 'disabled'}>建造 ${nxt.icon} ${nxt.name}（⭐${nxt.cost}，现有 ⭐${meta.stars}）</button>
+    <button class="btn ghost" id="tBack">返回</button>`);
+  $('#build').onclick = () => {
+    meta.stars -= nxt.cost; meta.town.built.push(built);
+    let msg = `🎉 ${nxt.name} 建好了！`;
+    if(meta.town.built.length >= a.items.length){
+      meta.coins += a.reward; meta.town = {area: meta.town.area + 1, built: []};
+      msg = `🎉 ${a.name} 全部建成！获得 ${COIN} ${a.reward}，解锁新区域`;
+    }
+    save(); refreshStats(); sfx.win(); toast(msg, 2600);
+    showTown(back);
+    const t = dialog.querySelectorAll('.tile')[Math.min(built, a.items.length - 1)];
+    if(t && meta.town.built.length) t.classList.add('pop');
+  };
+  $('#tBack').onclick = back;
+}
+
+// ---------- 装扮（皮肤衣柜） ----------
+function drawCarPreview(cv, i, len=1){
+  const g = cv.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const w = cv.clientWidth || 64, h = cv.clientHeight || 64;
+  cv.width = w*dpr; cv.height = h*dpr; g.setTransform(dpr,0,0,dpr,0,0);
+  const s = Math.min(w, h) * 0.78;
+  const fake = {color:i, dir: len === 2 ? 1 : 0, len, x:w/2, y:h/2 + 3, dl: len === 2 ? s*1.9 : s, dw: s*0.86,
+    ang: len === 2 ? Math.PI/2 : 0, scale:1, bump:null, bang:0, path:[]};
+  const saved = ctx; ctx = g;
+  try{ drawCar(fake, performance.now()); } finally { ctx = saved; }
+}
+function showWardrobe(back=closeDialog){
+  const cards = CAT_NAMES.map((name, i) => {
+    const info = CAT_INFO[i], owned = skinOwned(i), on = skinOn(i);
+    const status = on ? '<em class="tag on">佩戴中</em>' : owned ? '<em class="tag">已拥有</em>' : `<em class="tag lock">${SKIN_PRICE} 金币 / Lv3</em>`;
+    return `<button class="wcard ${on ? 'on' : ''}" data-i="${i}">
+      <canvas class="carpv" data-i="${i}"></canvas>
+      <b>${info.skin} ${info.skinName}</b><small>${name}专属</small>${status}</button>`;
+  }).join('');
+  openDialog(`<h2>🎨 装扮</h2><p>佩戴后，这种颜色的小猫车都会戴上<br><span style="font-size:12px">点卡片佩戴 / 取下或购买</span></p>
+    <div class="ward">${cards}</div>
+    <button class="btn ghost" id="wBack">返回</button>`);
+  dialog.querySelectorAll('canvas.carpv').forEach(cv => drawCarPreview(cv, +cv.dataset.i));
+  dialog.querySelectorAll('.wcard').forEach(b => b.onclick = () => {
+    const i = +b.dataset.i, info = CAT_INFO[i];
+    if(skinOwned(i)){
+      meta.skins.on = skinOn(i) ? meta.skins.on.filter(x => x !== i) : meta.skins.on.concat(i);
+      save(); toast(skinOn(i) ? `已佩戴「${info.skinName}」` : `已取下「${info.skinName}」`);
+      showWardrobe(back);
+    } else showCat(i, () => showWardrobe(back));
+  });
+  $('#wBack').onclick = back;
+}
+
+// ---------- 加长车说明（首次出现时弹出） ----------
+function maybeLongGuide(){
+  if(meta.seenLong || !S.cars.some(c => c.len === 2)) return;
+  setTimeout(() => {
+    if(!mask.hidden || meta.seenLong) return;
+    meta.seenLong = true; save();
+    openDialog(`<h2>🚌 新车型：加长车</h2>
+      <canvas class="carpv long" data-i="4"></canvas>
+      <p>占 <b>2 格</b>，但只算 <b>1 辆车</b>、坐 1 只猫<br>车身长，更容易挡路，也更难挪开<br>车顶带 ${COIN}：送它回家额外 <b>+3 金币</b></p>
+      <button class="btn primary" id="okLong">知道了</button>`);
+    drawCarPreview(dialog.querySelector('canvas.carpv'), CAT.PURPLE, 2);
+    $('#okLong').onclick = closeDialog;
+  }, 700);
+}
+
 // ---------- 猫咪养成：等级、技能、皮肤 ----------
 // 等级：送回家 10 / 30 / 80 只升到 Lv1 / Lv2 / Lv3；技能只在闯关模式生效（今日挑战保持公平）
 const CAT_LV_NEED = [0, 10, 30, 80];
@@ -853,7 +1085,7 @@ function skinOn(i){ return skinOwned(i) && meta.skins.on.includes(i); }
 function addCoins(n, x, y, who){
   if(!n) return;
   meta.coins += n; save(); refreshStats();
-  if(x != null) floatText(x, y, `+${n}🪙 ${who}`, '#E6A100', 15);
+  if(x != null) floatText(x, y, `+${n} 金币 ${who}`, '#E6A100', 15);
 }
 // 每辆巴士接走 3 只猫后调用：记录图鉴、新猫入册、升级、技能加成
 function onBusClear(bus, x, y){
@@ -863,9 +1095,11 @@ function onBusClear(bus, x, y){
   if(wasNew) setTimeout(() => toast(`🎉 新猫咪入册：${CAT_NAMES[i]}！点 🏠 → 图鉴查看`, 2600), 300);
   else if(after > before){
     meta.coins += CAT_LV_REWARD[after]; save(); refreshStats();
-    setTimeout(() => toast(`⬆️ ${CAT_NAMES[i]} 升到 Lv${after}！获得 🪙 ${CAT_LV_REWARD[after]}${after === 3 ? '，解锁专属皮肤' : ''}`, 2800), 300);
+    setTimeout(() => toast(`⬆️ ${CAT_NAMES[i]} 升到 Lv${after}！获得 ${COIN} ${CAT_LV_REWARD[after]}${after === 3 ? '，解锁专属皮肤，去首页「装扮」佩戴' : ''}`, 2800), 300);
     if(after === 3 && !meta.skins.on.includes(i)){ meta.skins.on.push(i); save(); }
   }
+  const longs = bus.cats.filter(c => c.len === 2).length;
+  if(longs) addCoins(3 * longs, x, y - 86, '加长车');
   if(S.mode !== 'level') return;
   if(!S.firstClearDone){
     S.firstClearDone = true;
@@ -952,13 +1186,13 @@ function showDex(back=closeDialog){
 }
 function showCat(i, back){
   const info = CAT_INFO[i], lv = catLv(i), n = meta.dex[i];
-  const next = lv < 3 ? `再送 ${CAT_LV_NEED[lv+1] - n} 只升到 Lv${lv+1}（奖励 🪙 ${CAT_LV_REWARD[lv+1]}）` : '已满级';
+  const next = lv < 3 ? `再送 ${CAT_LV_NEED[lv+1] - n} 只升到 Lv${lv+1}（奖励 ${COIN} ${CAT_LV_REWARD[lv+1]}）` : '已满级';
   const rows = [1,2,3].map(k => `<div class="skillrow ${k === lv ? 'cur' : ''} ${k > lv ? 'future' : ''}">
       <span class="lv">Lv${k}</span><span>${info.desc(info.vals[k])}</span><small>${CAT_LV_NEED[k]} 只</small></div>`).join('');
   const owned = skinOwned(i), on = skinOn(i);
   const skinBtn = owned
     ? `<button class="btn primary" id="skinToggle">${on ? '取下' : '佩戴'}「${info.skinName}」${info.skin}</button>`
-    : `<button class="btn primary" id="skinBuy" ${meta.coins < SKIN_PRICE ? 'disabled' : ''}>🪙 ${SKIN_PRICE} 购买「${info.skinName}」${info.skin}</button>
+    : `<button class="btn primary" id="skinBuy" ${meta.coins < SKIN_PRICE ? 'disabled' : ''}>${COIN} ${SKIN_PRICE} 购买「${info.skinName}」${info.skin}</button>
        <p class="mini" style="margin:4px 0 0!important">升到 Lv3 免费解锁</p>`;
   openDialog(`<canvas class="portrait big" data-i="${i}" data-locked="0"></canvas>
     <h2>${CAT_NAMES[i]} <span class="lv">Lv${lv}</span></h2>
@@ -1093,6 +1327,18 @@ function drawCar(c, now){
     ctx.font = `${Math.round(s*0.46)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText(CAT_INFO[c.color].skin, 0, -l/2 + s*0.1);
   }
+  // 加长车：车顶金币，送回家额外 +3
+  if(c.len === 2){
+    const cx0 = l > w*1.5 ? 0 : w*0.3, cy0 = l > w*1.5 ? 0 : -l*0.3, r0 = s*0.15;
+    ctx.save(); ctx.translate(cx0, cy0); ctx.rotate(-c.ang);
+    const gr = ctx.createRadialGradient(-r0*0.3, -r0*0.3, r0*0.1, 0, 0, r0);
+    gr.addColorStop(0, '#FFE58A'); gr.addColorStop(0.6, '#F5B700'); gr.addColorStop(1, '#D99400');
+    ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(0, 0, r0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#B97E00'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.fillStyle = '#8A5A00'; ctx.font = `900 ${Math.round(r0*1.1)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('3', 0, r0*0.08);
+    ctx.restore();
+  }
   // 被撞到时的红色闪烁
   if(c.bang && now > c.bang && now - c.bang < 500){
     ctx.fillStyle = `rgba(239,79,79,${0.45*(1-(now-c.bang)/500)})`; rr(-w/2, -l/2, w, l, r); ctx.fill();
@@ -1110,9 +1356,10 @@ function drawCar(c, now){
 }
 function drawBoard(){
   const {cols, rows} = S.cfg;
-  ctx.fillStyle = S.cfg.boss ? '#E9D3B8' : '#EADFD1'; rr(L.bx-8, L.by-8, L.bw+16, L.bh+16, 18); ctx.fill();
-  ctx.fillStyle = '#F6EFE6'; rr(L.bx-2, L.by-2, L.bw+4, L.bh+4, 14); ctx.fill();
-  ctx.strokeStyle = '#E3D5C3'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+  const th = currentTheme();
+  ctx.fillStyle = S.cfg.boss ? shade(th.frame, 0.93) : th.frame; rr(L.bx-8, L.by-8, L.bw+16, L.bh+16, 18); ctx.fill();
+  ctx.fillStyle = th.lot; rr(L.bx-2, L.by-2, L.bw+4, L.bh+4, 14); ctx.fill();
+  ctx.strokeStyle = th.line; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
   for(let i=1;i<cols;i++){ ctx.beginPath(); ctx.moveTo(L.bx+i*L.cell, L.by+4); ctx.lineTo(L.bx+i*L.cell, L.by+L.bh-4); ctx.stroke(); }
   for(let j=1;j<rows;j++){ ctx.beginPath(); ctx.moveTo(L.bx+4, L.by+j*L.cell); ctx.lineTo(L.bx+L.bw-4, L.by+j*L.cell); ctx.stroke(); }
   ctx.setLineDash([]);
@@ -1141,10 +1388,11 @@ function drawTray(now){
   const first = slotCenter(0, S.cap), last = slotCenter(S.cap-1, S.cap);
   const pad = 8, s = L.slotSize;
   const danger = S.slots.length >= S.cap - 2 && !S.over;
-  ctx.fillStyle = '#7A5C48'; rr(first.x - s/2 - pad, L.trayY, last.x - first.x + s + pad*2, L.trayH, 16); ctx.fill();
+  const th = currentTheme();
+  ctx.fillStyle = th.tray; rr(first.x - s/2 - pad, L.trayY, last.x - first.x + s + pad*2, L.trayH, 16); ctx.fill();
   for(let i=0;i<S.cap;i++){
     const p = slotCenter(i, S.cap);
-    ctx.fillStyle = i===7 ? '#A07A5E' : '#5E4434'; rr(p.x - s/2, p.y - s/2, s, s, 10); ctx.fill();
+    ctx.fillStyle = i===7 ? shade(th.slot, 1.5) : th.slot; rr(p.x - s/2, p.y - s/2, s, s, 10); ctx.fill();
   }
   if(danger){
     ctx.strokeStyle = `rgba(239,79,79,${0.5+0.5*Math.sin(now/120)})`; ctx.lineWidth = 3;
@@ -1278,6 +1526,7 @@ function frame(now){
 
     // 绘制
     ctx.clearRect(0,0,W,H);
+    drawScenery(now, dt);
     drawBoard(); drawTray(now);
     const gridCars = S.cars.filter(c => c.state==='grid');
     gridCars.forEach(c => drawCar(c, now));
@@ -1305,13 +1554,14 @@ function frame(now){
 let drawOnly = false;
 
 // ---------- 启动 ----------
+applyTheme();
 resize();
 newGame(meta.level);
 requestAnimationFrame(frame);
 showHome();
 
 // 调试入口：控制台里 mlgc.go(5) 跳关
-window.mlgc = { go(n){ closeDialog(); newGame(n); }, daily(stage){ ensureDaily(); closeDialog(); newGame(stage, 'daily'); }, setToday(d){ todayOverride = d; }, state: () => S, meta, freeCars: () => freeCars(), blockerOf: c => blockerOf(c),
+window.mlgc = { go(n){ closeDialog(); newGame(n); }, daily(stage){ ensureDaily(); closeDialog(); newGame(stage, 'daily'); }, setToday(d){ todayOverride = d; appliedTheme = null; applyTheme(); }, theme(i){ themeOverride = i; appliedTheme = null; applyTheme(); }, state: () => S, meta, freeCars: () => freeCars(), blockerOf: c => blockerOf(c),
   // 自动化测试用：页面在后台时 rAF 不触发，可手动推进若干毫秒
   pump(ms){ const end = performance.now() + ms; while(performance.now() < end){ const s = performance.now(); while(performance.now() - s < 16){} drawOnly = true; frame(performance.now()); drawOnly = false; } } };
 })();
