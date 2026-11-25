@@ -87,6 +87,18 @@
   .pv{flex:1}
   .nm{color:var(--muted);font-size:13px}
   .rankgap{text-align:center;color:var(--muted)}
+  .dexcard{border:0;cursor:pointer;font:inherit;color:inherit;width:100%}
+  canvas.portrait{width:44px;height:44px;position:static;flex:none}
+  canvas.portrait.big{width:96px;height:96px;display:block;margin:0 auto 6px}
+  .lv{display:inline-block;background:var(--accent);color:#fff;border-radius:6px;font-size:11px;padding:1px 5px;vertical-align:middle}
+  .skill{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px}
+  .skill span{font-size:11px;color:var(--muted)}
+  .skillrows{margin:6px 0 4px;text-align:left}
+  .skillrow{display:flex;gap:8px;align-items:center;padding:7px 8px;border-radius:10px;font-size:13px}
+  .skillrow span:nth-child(2){flex:1}
+  .skillrow small{color:var(--muted);font-size:11px}
+  .skillrow.cur{background:#FFE2C8;font-weight:700}
+  .skillrow.future{opacity:.5}
   #stats{text-align:center;font-size:10px;color:var(--muted);opacity:.7;pointer-events:none;
     padding-bottom:calc(6px + env(safe-area-inset-bottom))}
 </style>
@@ -312,9 +324,11 @@ const meta = {
   daily: store.get('daily', {date:'', stage:1, cleared:false, attempts:0, rewarded1:false}),
   streak: store.get('streak', {last:'', count:0}),
   contrib: store.get('contrib', {}),   // 每天为省份贡献的通关次数 {日期: 次数}
+  skins: store.get('skins', {owned:[], on:[]}),
+  tyDate: store.get('tyDate', ''),
   adViews: 0, interstitials: 0, shares: 0,
 };
-function save(){ ['level','coins','inv','dex','dexClaimed','gift','sound','province','daily','streak','contrib'].forEach(k => store.set(k, meta[k])); }
+function save(){ ['level','coins','inv','dex','dexClaimed','gift','sound','province','daily','streak','contrib','skins','tyDate'].forEach(k => store.set(k, meta[k])); }
 
 // 日期（本地时区）；调试时可用 mlgc.setToday('2026-12-01') 覆盖
 let todayOverride = '';
@@ -380,7 +394,8 @@ function newGame(level, mode='level'){
   const grid = new Array(cfg.cols*cfg.rows).fill(null);
   S = {level, mode, cfg, grid, cars:[], slots:[], buffer:[], buses:[], particles:[], floats:[],
        cap:7, history:[], revives:0, over:false, total:0, used:{},
-       combo:0, lastClear:0, lastBeat:0, tutorial: !daily && level===1, extraUsed:false};
+       combo:0, lastClear:0, lastBeat:0, tutorial: !daily && level===1, extraUsed:false,
+       firstClearDone:false, freeUndo:0, matchaAvail:false};
   S.cars = cars.map((c,i) => {
     const car = {id:i, color:c.color, dir:c.dir, len:c.len, cells:c.cells.slice(), fx:c.x, fy:c.y,
       x:0, y:0, dl:0, dw:0, ang:DIRS[c.dir].a, path:[], state:'grid', scale:0, bump:null, flash:0, bang:0};
@@ -414,6 +429,7 @@ function newGame(level, mode='level'){
     meta.gift = true; ['undo','pop','shuffle','extra'].forEach(k => meta.inv[k] += 1); save();
     setTimeout(() => toast('🎁 道具已解锁，每种送你 1 个！', 2400), 400);
   }
+  applyStartSkills();
   refreshProps(); refreshStats();
 }
 
@@ -589,6 +605,7 @@ function useProp(key){
   }
   if(S.level < PROP_UNLOCK_LEVEL){ toast(`第 ${PROP_UNLOCK_LEVEL} 关解锁道具`); return; }
   if(!p.can()){ toast(p.why); return; }
+  if(key === 'undo' && S.freeUndo > 0){ S.freeUndo--; applyProp(key); toast(`🫐 蓝莓的后悔药：免费撤回（本关还剩 ${S.freeUndo} 次）`); return; }
   if(meta.inv[key] > 0){ meta.inv[key]--; save(); applyProp(key); return; }
   openDialog(`<div class="big">${p.icon}</div><h2>${p.name}</h2><p>${p.desc}</p>
     <button class="btn ad" id="pAd">📺 看广告得 ${p.give} 个</button>
@@ -610,7 +627,7 @@ function refreshProps(){
     b.classList.toggle('locked', locked || (daily && !!S.used[key]));
     if(locked){ badge.textContent = '🔒'; badge.className = 'badge count'; return; }
     if(daily){ badge.textContent = S.used[key] ? '已用' : '1次'; badge.className = 'badge' + (S.used[key] ? ' count' : ''); return; }
-    const n = meta.inv[key];
+    const n = meta.inv[key] + (key === 'undo' ? S.freeUndo : 0);
     badge.textContent = n > 0 ? n : '+';
     badge.className = 'badge' + (n > 0 ? ' count' : '');
   });
@@ -696,13 +713,16 @@ function showLose(){
   const COST = 60;
   // 阶梯复活：看广告 → 分享求助 → （闯关模式）金币
   let btn = '';
+  const matcha = S.mode === 'level' && S.matchaAvail ? '<button class="btn ad" id="matcha">🍵 抹茶的佛系复活（免费）</button>' : '';
   if(S.revives === 0) btn = '<button class="btn ad" id="revive">📺 看广告复活（移出 3 辆车）</button>';
   else if(S.revives === 1) btn = '<button class="btn primary" id="revive">📤 分享求助复活</button>';
   else if(S.revives === 2 && !daily) btn = `<button class="btn primary" id="revive" ${meta.coins < COST ? 'disabled' : ''}>🪙 ${COST} 金币复活</button>`;
-  openDialog(`<div class="big">😿</div><h2>${title}</h2><p>${tip}</p>${btn}
+  openDialog(`<div class="big">😿</div><h2>${title}</h2><p>${tip}</p>${matcha}${btn}
     <button class="btn ghost" id="retry">${daily && S.level === 2 ? '再挑战一次' : '重新开始'}</button>
     ${daily ? '<button class="btn ghost" id="home">返回首页</button>' : ''}`);
   const doRevive = () => { S.revives++; S.over = false; closeDialog(); popToBuffer(3); };
+  const mt = $('#matcha');
+  if(mt) mt.onclick = () => { S.matchaAvail = false; S.over = false; closeDialog(); popToBuffer(3); toast('🍵 抹茶：慢慢来，不着急～'); };
   const rv = $('#revive');
   if(rv){
     if(S.revives === 0) rv.onclick = () => showRewardAd('复活一次', doRevive, showLose);
@@ -803,24 +823,161 @@ function showHome(){
   $('#hRank').onclick = () => showRanking(showHome);
   $('#hDex').onclick = () => showDex(showHome);
 }
+// ---------- 猫咪养成：等级、技能、皮肤 ----------
+// 等级：送回家 10 / 30 / 80 只升到 Lv1 / Lv2 / Lv3；技能只在闯关模式生效（今日挑战保持公平）
+const CAT_LV_NEED = [0, 10, 30, 80];
+const CAT_LV_REWARD = [0, 30, 60, 100];
+const SKIN_PRICE = 300;
+const CAT_INFO = [
+  {tag:'吃饱了才肯开车，一开就停不下来', skill:'开门红', vals:[0,3,5,8],
+   desc:v => `每关第一次三消，额外 +${v} 金币`, skin:'👑', skinName:'小皇冠'},
+  {tag:'做事一丝不苟，后悔药随身带', skill:'后悔药', vals:[0,1,2,3],
+   desc:v => `每关免费撤回 ${v} 次（第 3 关起）`, skin:'🎩', skinName:'绅士礼帽'},
+  {tag:'最爱热闹，连击越多越开心', skill:'热闹派对', vals:[0,1,2,3],
+   desc:v => `连击时额外获得 连击数 × ${v} 金币`, skin:'🎀', skinName:'蝴蝶结'},
+  {tag:'淡定佛系，摔倒了也能慢慢爬起来', skill:'佛系复活', vals:[0,30,60,100],
+   desc:v => `每关有 ${v}% 概率获得一次免费复活`, skin:'🌿', skinName:'抹茶叶'},
+  {tag:'开长车的老司机，越长越稳', skill:'老司机', vals:[0,4,7,10],
+   desc:v => `三消中有长车时，额外 +${v} 金币`, skin:'🕶️', skinName:'酷墨镜'},
+  {tag:'眼尖心细，危险时会给你递眼色', skill:'危险预知', vals:[0,1,2,3],
+   desc:v => `槽位只剩 ${v} 格时，高亮一辆推荐的车`, skin:'🌼', skinName:'小雏菊'},
+  {tag:'软萌团子，每天都给你带礼物', skill:'每日礼物', vals:[0,1,2,3],
+   desc:v => `每天第一局闯关，随机送 ${v} 个道具`, skin:'🧣', skinName:'暖围巾'},
+];
+const CAT = {ORANGE:0, BLUE:1, PINK:2, GREEN:3, PURPLE:4, YELLOW:5, GRAY:6};
+function catLv(i){ const n = meta.dex[i]; return n >= 80 ? 3 : n >= 30 ? 2 : n >= 10 ? 1 : 0; }
+function skillVal(i){ return CAT_INFO[i].vals[catLv(i)]; }
+function skillOn(i){ return S && S.mode === 'level' && catLv(i) > 0; }
+function skinOwned(i){ return catLv(i) >= 3 || meta.skins.owned.includes(i); }
+function skinOn(i){ return skinOwned(i) && meta.skins.on.includes(i); }
+function addCoins(n, x, y, who){
+  if(!n) return;
+  meta.coins += n; save(); refreshStats();
+  if(x != null) floatText(x, y, `+${n}🪙 ${who}`, '#E6A100', 15);
+}
+// 每辆巴士接走 3 只猫后调用：记录图鉴、新猫入册、升级、技能加成
+function onBusClear(bus, x, y){
+  const i = bus.color, before = catLv(i), wasNew = meta.dex[i] === 0;
+  meta.dex[i] += 3; save();
+  const after = catLv(i);
+  if(wasNew) setTimeout(() => toast(`🎉 新猫咪入册：${CAT_NAMES[i]}！点 🏠 → 图鉴查看`, 2600), 300);
+  else if(after > before){
+    meta.coins += CAT_LV_REWARD[after]; save(); refreshStats();
+    setTimeout(() => toast(`⬆️ ${CAT_NAMES[i]} 升到 Lv${after}！获得 🪙 ${CAT_LV_REWARD[after]}${after === 3 ? '，解锁专属皮肤' : ''}`, 2800), 300);
+    if(after === 3 && !meta.skins.on.includes(i)){ meta.skins.on.push(i); save(); }
+  }
+  if(S.mode !== 'level') return;
+  if(!S.firstClearDone){
+    S.firstClearDone = true;
+    if(skillOn(CAT.ORANGE)) addCoins(skillVal(CAT.ORANGE), x, y - 26, '橘子');
+  }
+  if(bus.combo > 1 && skillOn(CAT.PINK)) addCoins(bus.combo * skillVal(CAT.PINK), x, y - 46, '桃桃');
+  if(bus.cats.some(c => c.len === 2) && skillOn(CAT.PURPLE)) addCoins(skillVal(CAT.PURPLE), x, y - 66, '葡萄');
+}
+// 开局时结算的技能
+function applyStartSkills(){
+  if(S.mode !== 'level') return;
+  S.freeUndo = (S.level >= PROP_UNLOCK_LEVEL && skillOn(CAT.BLUE)) ? skillVal(CAT.BLUE) : 0;
+  S.matchaAvail = skillOn(CAT.GREEN) && Math.random() * 100 < skillVal(CAT.GREEN);
+  if(skillOn(CAT.GRAY) && meta.tyDate !== today()){
+    meta.tyDate = today();
+    const keys = ['undo','pop','shuffle','extra'], got = [];
+    for(let k=0;k<skillVal(CAT.GRAY);k++){ const key = keys[Math.floor(Math.random()*keys.length)]; meta.inv[key]++; got.push(PROPS[key].name); }
+    save();
+    setTimeout(() => toast(`🧣 汤圆的每日礼物：${got.join('、')}`, 2600), 900);
+  }
+}
+// 柠檬：危险时推荐一辆车（优先能凑成三消的颜色）
+function lemonPick(){
+  if(!skillOn(CAT.YELLOW) || S.over) return null;
+  if(S.cap - S.slots.length > skillVal(CAT.YELLOW)) return null;
+  const free = freeCars(); if(!free.length) return null;
+  const cnt = c => S.slots.filter(s => s.color===c.color).length;
+  free.sort((a,b) => cnt(b) - cnt(a) || a.id - b.id);
+  return free[0];
+}
+
+// 猫咪画像（图鉴用）
+function drawPortrait(cv, i, locked){
+  const g = cv.getContext('2d'), dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const size = cv.clientWidth || 44;
+  cv.width = size*dpr; cv.height = size*dpr; g.setTransform(dpr,0,0,dpr,0,0);
+  const color = locked ? '#CDBFAE' : PALETTE[i], s = size, cx = s/2, cy = s*0.58;
+  g.fillStyle = locked ? '#EFE6DB' : shade(PALETTE[i], 1.25) ;
+  g.beginPath(); g.arc(cx, s/2, s*0.48, 0, Math.PI*2); g.fill();
+  g.fillStyle = color;
+  g.beginPath(); g.moveTo(cx - s*0.32, cy - s*0.06); g.lineTo(cx - s*0.27, cy - s*0.42); g.lineTo(cx - s*0.05, cy - s*0.24); g.fill();
+  g.beginPath(); g.moveTo(cx + s*0.32, cy - s*0.06); g.lineTo(cx + s*0.27, cy - s*0.42); g.lineTo(cx + s*0.05, cy - s*0.24); g.fill();
+  g.beginPath(); g.ellipse(cx, cy, s*0.31, s*0.27, 0, 0, Math.PI*2); g.fill();
+  if(locked){
+    g.fillStyle = '#fff'; g.font = `bold ${Math.round(s*0.32)}px sans-serif`; g.textAlign='center'; g.textBaseline='middle';
+    g.fillText('?', cx, cy + 1); return;
+  }
+  g.fillStyle = '#FFC4D6';
+  g.beginPath(); g.moveTo(cx - s*0.26, cy - s*0.1); g.lineTo(cx - s*0.24, cy - s*0.32); g.lineTo(cx - s*0.1, cy - s*0.22); g.fill();
+  g.beginPath(); g.moveTo(cx + s*0.26, cy - s*0.1); g.lineTo(cx + s*0.24, cy - s*0.32); g.lineTo(cx + s*0.1, cy - s*0.22); g.fill();
+  g.fillStyle = '#2B2222';
+  g.beginPath(); g.arc(cx - s*0.11, cy - s*0.02, s*0.04, 0, Math.PI*2); g.arc(cx + s*0.11, cy - s*0.02, s*0.04, 0, Math.PI*2); g.fill();
+  g.fillStyle = '#fff';
+  g.beginPath(); g.arc(cx - s*0.1, cy - s*0.04, s*0.014, 0, Math.PI*2); g.arc(cx + s*0.12, cy - s*0.04, s*0.014, 0, Math.PI*2); g.fill();
+  g.fillStyle = '#FF7A9C';
+  g.beginPath(); g.moveTo(cx - s*0.03, cy + s*0.05); g.lineTo(cx + s*0.03, cy + s*0.05); g.lineTo(cx, cy + s*0.09); g.fill();
+  g.fillStyle = 'rgba(255,255,255,.85)'; g.font = `bold ${Math.round(s*0.13)}px sans-serif`; g.textAlign='center'; g.textBaseline='middle';
+  g.fillText(SYMBOLS[i], cx, cy + s*0.17);
+  if(skinOn(i)){ g.font = `${Math.round(s*0.26)}px sans-serif`; g.fillText(CAT_INFO[i].skin, cx, cy - s*0.32); }
+}
+function renderPortraits(){ dialog.querySelectorAll('canvas.portrait').forEach(cv => drawPortrait(cv, +cv.dataset.i, cv.dataset.locked === '1')); }
+
 function showDex(back=closeDialog){
-  const DEX_MAX = 30, DEX_REWARD = 50;
   const cards = CAT_NAMES.map((name, i) => {
-    const n = meta.dex[i], seen = n > 0, max = n >= DEX_MAX;
-    return `<div class="dexcard ${seen ? '' : 'locked'} ${max ? 'max' : ''}">
-      <div class="dexicon" style="background:${seen ? PALETTE[i] : '#C9BBAA'}">${seen ? SYMBOLS[i] : '?'}</div>
-      <div style="flex:1;min-width:0"><b>${seen ? name : '???'}</b>
-      <small>${max ? (meta.dexClaimed[i] ? '已满级' : '可领奖励！') : `送回家 ${n}/${DEX_MAX}`}</small>
-      <div class="bar"><i style="width:${Math.min(100, n/DEX_MAX*100)}%"></i></div></div></div>`;
+    const n = meta.dex[i], seen = n > 0, lv = catLv(i);
+    const need = CAT_LV_NEED[Math.min(lv + 1, 3)], prev = CAT_LV_NEED[lv];
+    const pct = lv >= 3 ? 100 : Math.min(100, (n - prev) / (need - prev) * 100);
+    return `<button class="dexcard ${seen ? '' : 'locked'} ${lv >= 3 ? 'max' : ''}" data-i="${i}">
+      <canvas class="portrait" data-i="${i}" data-locked="${seen ? 0 : 1}"></canvas>
+      <div style="flex:1;min-width:0"><b>${seen ? name : '???'} ${seen ? `<span class="lv">Lv${lv}</span>` : ''}</b>
+      <small>${seen ? CAT_INFO[i].skill : '还没遇到'}</small>
+      <div class="bar"><i style="width:${seen ? pct : 0}%"></i></div></div></button>`;
   }).join('');
-  const claimable = CAT_NAMES.map((_,i) => i).filter(i => meta.dex[i] >= DEX_MAX && !meta.dexClaimed[i]);
-  openDialog(`<h2>📖 猫咪图鉴</h2><p>每送 ${DEX_MAX} 只同种猫咪回家，可领 🪙 ${DEX_REWARD}</p>
+  openDialog(`<h2>📖 猫咪图鉴</h2><p>送猫咪回家可以升级，解锁闯关技能和专属皮肤<br><span style="font-size:12px">点卡片查看详情</span></p>
     <div class="dex">${cards}</div>
-    ${claimable.length ? `<button class="btn primary" id="claim">领取 🪙 ${claimable.length * DEX_REWARD}</button>` : ''}
     <button class="btn ghost" id="dexClose">返回</button>`);
-  const cl = $('#claim');
-  if(cl) cl.onclick = () => { claimable.forEach(i => meta.dexClaimed[i] = 1); meta.coins += claimable.length*DEX_REWARD; save(); refreshStats(); showDex(back); };
+  renderPortraits();
+  dialog.querySelectorAll('.dexcard').forEach(b => b.onclick = () => {
+    const i = +b.dataset.i;
+    if(meta.dex[i] === 0){ toast('先在游戏里遇到这只猫咪吧'); return; }
+    showCat(i, () => showDex(back));
+  });
   $('#dexClose').onclick = back;
+}
+function showCat(i, back){
+  const info = CAT_INFO[i], lv = catLv(i), n = meta.dex[i];
+  const next = lv < 3 ? `再送 ${CAT_LV_NEED[lv+1] - n} 只升到 Lv${lv+1}（奖励 🪙 ${CAT_LV_REWARD[lv+1]}）` : '已满级';
+  const rows = [1,2,3].map(k => `<div class="skillrow ${k === lv ? 'cur' : ''} ${k > lv ? 'future' : ''}">
+      <span class="lv">Lv${k}</span><span>${info.desc(info.vals[k])}</span><small>${CAT_LV_NEED[k]} 只</small></div>`).join('');
+  const owned = skinOwned(i), on = skinOn(i);
+  const skinBtn = owned
+    ? `<button class="btn primary" id="skinToggle">${on ? '取下' : '佩戴'}「${info.skinName}」${info.skin}</button>`
+    : `<button class="btn primary" id="skinBuy" ${meta.coins < SKIN_PRICE ? 'disabled' : ''}>🪙 ${SKIN_PRICE} 购买「${info.skinName}」${info.skin}</button>
+       <p class="mini" style="margin:4px 0 0!important">升到 Lv3 免费解锁</p>`;
+  openDialog(`<canvas class="portrait big" data-i="${i}" data-locked="0"></canvas>
+    <h2>${CAT_NAMES[i]} <span class="lv">Lv${lv}</span></h2>
+    <p>“${info.tag}”<br>已送回家 ${n} 只 · ${next}</p>
+    <div class="skill"><b>技能「${info.skill}」</b><span>仅闯关模式生效</span></div>
+    <div class="skillrows">${rows}</div>
+    ${skinBtn}
+    <button class="btn ghost" id="catBack">返回</button>`);
+  renderPortraits();
+  const t = $('#skinToggle');
+  if(t) t.onclick = () => {
+    meta.skins.on = on ? meta.skins.on.filter(x => x !== i) : meta.skins.on.concat(i); save(); showCat(i, back);
+  };
+  const b = $('#skinBuy');
+  if(b) b.onclick = () => {
+    meta.coins -= SKIN_PRICE; meta.skins.owned.push(i); meta.skins.on.push(i); save(); refreshStats();
+    toast(`获得皮肤「${info.skinName}」！`); showCat(i, back);
+  };
+  $('#catBack').onclick = back;
 }
 
 // ---------- 特效 ----------
@@ -930,6 +1087,12 @@ function drawCar(c, now){
   ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(s*0.26)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(SYMBOLS[c.color], 0, s*0.01);
   ctx.restore();
+  if(skinOn(c.color)){
+    // 皮肤戴在两耳之间，尺寸足够在停车场里一眼认出
+    ctx.fillStyle = '#000'; // emoji 会继承 fillStyle 的透明度，这里必须是不透明色
+    ctx.font = `${Math.round(s*0.46)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(CAT_INFO[c.color].skin, 0, -l/2 + s*0.1);
+  }
   // 被撞到时的红色闪烁
   if(c.bang && now > c.bang && now - c.bang < 500){
     ctx.fillStyle = `rgba(239,79,79,${0.45*(1-(now-c.bang)/500)})`; rr(-w/2, -l/2, w, l, r); ctx.fill();
@@ -1028,11 +1191,24 @@ function drawHand(now){
   ctx.globalAlpha = 1 - (now/12 % 16)/16;
   ctx.beginPath(); ctx.arc(h.x, h.y, pr, 0, Math.PI*2); ctx.stroke();
   ctx.globalAlpha = 1;
+  ctx.fillStyle = '#000';
   ctx.font = `${Math.round(L.cell*0.6)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='top';
   ctx.fillText('👆', h.x + L.cell*0.12, h.y + L.cell*0.15 + bob);
   ctx.restore();
 }
 
+function drawLemon(now){
+  const c = lemonPick(); if(!c) return;
+  const h = homeOf(c);
+  ctx.save();
+  ctx.strokeStyle = `rgba(242,194,48,${0.6 + 0.4*Math.sin(now/140)})`; ctx.lineWidth = 4;
+  const bw = (c.dir%2 ? c.len : 1)*L.cell, bh = (c.dir%2 ? 1 : c.len)*L.cell;
+  rr(h.x - bw/2 + 1, h.y - bh/2 + 1, bw - 2, bh - 2, 12); ctx.stroke();
+  ctx.fillStyle = '#000';
+  ctx.font = `${Math.round(L.cell*0.36)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('🍋', h.x + bw/2 - L.cell*0.12, h.y - bh/2 + L.cell*0.12);
+  ctx.restore();
+}
 const ease = t => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
 let last = performance.now();
 function frame(now){
@@ -1056,7 +1232,7 @@ function frame(now){
         sfx.clear(bus.combo);
         burst(cx, bd.y, PALETTE[bus.color]);
         floatText(cx, bd.y - bd.h*0.9, bus.combo > 1 ? `连击 ×${bus.combo}！` : '喵巴士 +1', bus.combo > 1 ? '#FF3D7F' : '#FF6B3D', bus.combo > 1 ? 22 : 18);
-        meta.dex[bus.color] += 3; save();
+        onBusClear(bus, cx, bd.y - bd.h*0.9);
       }
       bus.done = t > 1.25;
     }
@@ -1107,6 +1283,7 @@ function frame(now){
     gridCars.forEach(c => drawCar(c, now));
     if(press && press.preview && press.car.state==='grid') drawPreview(press.car);
     drawHand(now);
+    drawLemon(now);
     const rest = S.cars.filter(c => c.state==='slot' || c.state==='buffer' || c.state==='die');
     rest.filter(c => !c.path.length).forEach(c => drawCar(c, now));
     S.buses.forEach(drawBus);
