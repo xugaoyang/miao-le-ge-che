@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>喵了个车</title>
+<style>
+  :root{
+    --bg:#FFF4E6; --bg2:#FFE7CC; --ink:#3B2F2F; --muted:#8A7563;
+    --card:#FFFFFF; --accent:#FF8A3D; --accent2:#FF6B6B; --ok:#2DBE7E;
+    --lot:#EDE3D6; --line:#D9CBB8; --tray:#7A5C48;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
+  #app{position:relative;height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;
+    background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+  header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 4px;gap:8px}
+  .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;
+    box-shadow:0 2px 0 rgba(0,0,0,.08)}
+  #levelLabel{font-size:18px;font-weight:800;letter-spacing:1px}
+  .iconbtn{border:0;background:var(--card);border-radius:12px;width:38px;height:38px;font-size:18px;
+    box-shadow:0 2px 0 rgba(0,0,0,.1);cursor:pointer}
+  #sub{text-align:center;font-size:12px;color:var(--muted);min-height:16px}
+  #stage{flex:1;position:relative;min-height:0}
+  canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+  #props{display:flex;justify-content:space-around;padding:8px 12px calc(14px + env(safe-area-inset-bottom))}
+  .prop{position:relative;border:0;background:var(--card);border-radius:16px;width:72px;height:64px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:22px;
+    box-shadow:0 3px 0 rgba(0,0,0,.12);cursor:pointer;color:var(--ink)}
+  .prop span{font-size:12px;font-weight:600}
+  .prop:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.12)}
+  .prop[disabled]{opacity:.4}
+  .badge{position:absolute;top:-6px;right:-6px;background:var(--accent2);color:#fff;font-size:10px;
+    border-radius:999px;padding:2px 6px;font-weight:700}
+  #toast{position:absolute;left:50%;top:84px;transform:translateX(-50%);background:rgba(59,47,47,.92);color:#fff;
+    padding:8px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;
+    white-space:nowrap;z-index:5}
+  #toast.show{opacity:1}
+  .mask{position:absolute;inset:0;background:rgba(40,30,25,.55);display:flex;align-items:center;justify-content:center;z-index:10;padding:16px}
+  .mask[hidden]{display:none}
+  .dialog{background:var(--card);border-radius:24px;padding:24px 20px;width:100%;max-width:340px;text-align:center;
+    box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .dialog h2{margin:0 0 6px;font-size:26px}
+  .dialog p{margin:6px 0 16px;color:var(--muted);font-size:14px;line-height:1.5}
+  .big{font-size:56px;line-height:1.1}
+  .btn{display:block;width:100%;border:0;border-radius:14px;padding:13px;font-size:16px;font-weight:700;margin-top:10px;cursor:pointer}
+  .btn.primary{background:var(--accent);color:#fff;box-shadow:0 3px 0 #D9682A}
+  .btn.ad{background:var(--ok);color:#fff;box-shadow:0 3px 0 #1F9A63}
+  .btn.ghost{background:#F3ECE4;color:var(--ink)}
+  .adbox{background:#222;color:#fff;border-radius:16px;height:180px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
+  .adbox b{font-size:40px}
+  #stats{position:absolute;left:8px;bottom:4px;font-size:10px;color:var(--muted);opacity:.7;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="pill">🪙 <b id="coins">0</b></div>
+    <div id="levelLabel">第 1 关</div>
+    <button class="iconbtn" id="btnRestart" title="重新开始" aria-label="重新开始">↻</button>
+  </header>
+  <div id="sub">点击小猫车，让它开出停车场</div>
+  <div id="stage"><canvas id="c"></canvas></div>
+  <div id="props">
+    <button class="prop" data-prop="undo"><i>↩️</i><span>撤回</span><em class="badge">📺</em></button>
+    <button class="prop" data-prop="pop"><i>🏗️</i><span>移出3辆</span><em class="badge">📺</em></button>
+    <button class="prop" data-prop="shuffle"><i>🔀</i><span>洗牌</span><em class="badge">📺</em></button>
+    <button class="prop" data-prop="extra"><i>➕</i><span>加一格</span><em class="badge">📺</em></button>
+  </div>
+  <div id="toast"></div>
+  <div id="stats"></div>
+  <div class="mask" id="mask" hidden><div class="dialog" id="dialog"></div></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+// ---------- 基础配置 ----------
+const PALETTE = ['#FF9F43','#5B8DEF','#FF6FAE','#34C77B','#A66CFF','#F5C518','#EF4F4F','#19B8B0','#9C6B45'];
+const DIRS = [
+  {dx:0, dy:-1, a:0},            // 上
+  {dx:1, dy:0,  a:Math.PI/2},    // 右
+  {dx:0, dy:1,  a:Math.PI},      // 下
+  {dx:-1,dy:0,  a:-Math.PI/2},   // 左
+];
+const BUFFER_CAP = 6;
+
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function shuffle(arr, R){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(R()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+// 关卡参数：第1关极简，第2关难度断崖，之后循序渐进
+function levelCfg(n){
+  if(n===1) return {cols:4,rows:5,cars:9, colors:3,chunk:3};
+  if(n===2) return {cols:7,rows:9,cars:60,colors:9,chunk:9};
+  return {
+    cols: 6 + (n % 2),
+    rows: 8 + (n % 3 ? 1 : 0),
+    cars: Math.min(27 + n * 3, 57),
+    colors: Math.min(5 + Math.floor(n / 2), 9),
+    chunk: n % 3 === 0 ? 9 : 6,
+  };
+}
+
+// 关卡生成：按“离场顺序”逆向摆放，保证每辆车都存在可开出的顺序；
+// 颜色按离场顺序分块分配，每块最多 3 种颜色 → 按该顺序操作槽位最多占 6 格，保证 7 格可解。
+function genLevel(n){
+  const cfg = levelCfg(n);
+  const R = mulberry32(n * 1000 + 17);
+  const {cols, rows} = cfg;
+  const occ = new Array(cols*rows).fill(false);
+  const placed = [];
+  const rayFree = (x,y,d) => {
+    let cx=x+d.dx, cy=y+d.dy;
+    while(cx>=0 && cy>=0 && cx<cols && cy<rows){ if(occ[cy*cols+cx]) return false; cx+=d.dx; cy+=d.dy; }
+    return true;
+  };
+  for(let i=0;i<cfg.cars;i++){
+    const cells=[]; for(let k=0;k<occ.length;k++) if(!occ[k]) cells.push(k);
+    shuffle(cells,R);
+    let ok=false;
+    for(const k of cells){
+      const x=k%cols, y=(k/cols)|0;
+      for(const di of shuffle([0,1,2,3],R)){
+        if(rayFree(x,y,DIRS[di])){ occ[k]=true; placed.push({x,y,dir:di}); ok=true; break; }
+      }
+      if(ok) break;
+    }
+    if(!ok) break;
+  }
+  while(placed.length % 3) placed.pop();
+  const order = placed.slice().reverse(); // 离场顺序
+  for(let i=0;i<order.length;){
+    const size = Math.min(cfg.chunk, order.length - i);
+    const k = size / 3;
+    const colorIds = shuffle([...Array(cfg.colors).keys()], R).slice(0, k);
+    const arr = []; colorIds.forEach(c => arr.push(c,c,c)); shuffle(arr, R);
+    for(let j=0;j<size;j++) order[i+j].color = arr[j];
+    i += size;
+  }
+  return {cfg, cars: placed};
+}
+
+// ---------- 存档（失败时降级为内存） ----------
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('mlgc_'+k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('mlgc_'+k, JSON.stringify(v)); }catch(e){} },
+};
+
+// ---------- 音效 ----------
+let actx = null;
+function beep(freq, dur=0.08, type='sine', vol=0.08){
+  try{
+    if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+    o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + dur);
+  }catch(e){}
+}
+const sfx = {
+  go(){ beep(520,.07,'triangle'); setTimeout(()=>beep(780,.07,'triangle'),50); },
+  bump(){ beep(140,.12,'square',.05); try{navigator.vibrate&&navigator.vibrate(30);}catch(e){} },
+  clear(){ [660,880,1100].forEach((f,i)=>setTimeout(()=>beep(f,.1,'triangle',.07),i*60)); try{navigator.vibrate&&navigator.vibrate(15);}catch(e){} },
+  win(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.15,'triangle',.08),i*110)); },
+  lose(){ [400,300,200].forEach((f,i)=>setTimeout(()=>beep(f,.18,'sawtooth',.04),i*130)); },
+};
+
+// ---------- DOM ----------
+const $ = s => document.querySelector(s);
+const canvas = $('#c'), ctx = canvas.getContext('2d');
+const stage = $('#stage');
+const mask = $('#mask'), dialog = $('#dialog');
+let toastTimer = 0;
+function toast(msg, ms=1600){
+  const t=$('#toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'), ms);
+}
+
+// ---------- 状态 ----------
+let S = null;
+let W=0, H=0, DPR=1, L=null; // 画布尺寸与布局
+const meta = {
+  level: store.get('level', 1),
+  coins: store.get('coins', 0),
+  adViews: 0, interstitials: 0,
+};
+
+function newGame(level){
+  const {cfg, cars} = genLevel(level);
+  const grid = new Array(cfg.cols*cfg.rows).fill(null);
+  const list = cars.map((c,i) => {
+    const car = {id:i, color:c.color, dir:c.dir, gx:c.x, gy:c.y, x:0, y:0, path:[], state:'grid', scale:1, shake:0, flash:0, dieAt:0};
+    grid[c.y*cfg.cols+c.x] = car;
+    return car;
+  });
+  S = {level, cfg, grid, cars:list, slots:[], buffer:[], dying:[], particles:[], floats:[],
+       cap:7, history:[], revived:false, used:{}, over:false, total:list.length};
+  layout();
+  list.forEach(c => { const p = cellCenter(c.gx,c.gy); c.x=p.x; c.y=p.y; c.scale=0; });
+  list.forEach((c,i)=> setTimeout(()=>{ c.scale=1; }, 8*i)); // 入场逐个弹出
+  $('#levelLabel').textContent = `第 ${level} 关`;
+  $('#sub').textContent = level===1 ? '点击小猫车，让它开出停车场；凑齐 3 辆同色就能坐巴士走～'
+                        : level===2 ? '⚠️ 难度断崖关：先想好再点！'
+                        : `剩余 ${S.total} 辆车`;
+  if(level===2) toast('⚠️ 第 2 关是难度断崖关，祝你好运', 2400);
+  refreshProps(); refreshStats();
+}
+
+// ---------- 布局 ----------
+function resize(){
+  const r = stage.getBoundingClientRect();
+  DPR = Math.min(window.devicePixelRatio || 1, 3);
+  W = r.width; H = r.height;
+  canvas.width = Math.round(W*DPR); canvas.height = Math.round(H*DPR);
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  if(S) layout();
+}
+function layout(){
+  const {cols, rows} = S.cfg;
+  const slotSize = Math.min((W - 40) / 8, 50);
+  const trayH = slotSize + 16;
+  const bufH = slotSize * 0.9;
+  const bottomBlock = trayH + bufH + 22;
+  const cell = Math.min((W - 24) / cols, (H - bottomBlock - 16) / rows, 64);
+  const bw = cell*cols, bh = cell*rows;
+  const bx = (W - bw)/2, by = Math.max(8, (H - bottomBlock - bh)/2);
+  const trayY = H - trayH - 8;
+  const bufY = trayY - bufH - 6;
+  L = {cell, bx, by, bw, bh, slotSize, trayY, trayH, bufY, bufH};
+}
+function cellCenter(gx,gy){ return {x: L.bx + (gx+.5)*L.cell, y: L.by + (gy+.5)*L.cell}; }
+function slotCenter(i, cap){
+  const n = cap, gap = 4;
+  const total = n*L.slotSize + (n-1)*gap;
+  const x0 = (W - total)/2;
+  return {x: x0 + i*(L.slotSize+gap) + L.slotSize/2, y: L.trayY + L.trayH/2};
+}
+function bufCenter(i){
+  const gap = 6, s = L.bufH;
+  const total = BUFFER_CAP*s + (BUFFER_CAP-1)*gap;
+  const x0 = (W - total)/2;
+  return {x: x0 + i*(s+gap) + s/2, y: L.bufY + s/2};
+}
+function targetOf(c){
+  if(c.state==='grid') return cellCenter(c.gx,c.gy);
+  if(c.state==='slot') return slotCenter(S.slots.indexOf(c), S.cap);
+  if(c.state==='buffer') return bufCenter(S.buffer.indexOf(c));
+  return {x:c.x, y:c.y};
+}
+function sizeOf(c){
+  if(c.state==='grid') return L.cell;
+  if(c.state==='buffer') return L.bufH;
+  if(c.state==='die') return L.slotSize;
+  return c.path.length ? Math.min(L.cell, L.slotSize*1.1) : L.slotSize;
+}
+
+// ---------- 规则 ----------
+function blockerOf(c){
+  const {cols, rows} = S.cfg, d = DIRS[c.dir];
+  let x=c.gx+d.dx, y=c.gy+d.dy;
+  while(x>=0 && y>=0 && x<cols && y<rows){ const o = S.grid[y*cols+x]; if(o) return o; x+=d.dx; y+=d.dy; }
+  return null;
+}
+function tapGridCar(c){
+  if(S.slots.length >= S.cap) return;
+  const b = blockerOf(c);
+  if(b){ c.shake = performance.now(); b.flash = performance.now(); sfx.bump(); return; }
+  const {cols, rows} = S.cfg, d = DIRS[c.dir];
+  // 先沿车头方向开出停车场，再飞入槽位
+  let steps = 0, x=c.gx, y=c.gy;
+  while(x>=0 && y>=0 && x<cols && y<rows){ x+=d.dx; y+=d.dy; steps++; }
+  const start = cellCenter(c.gx, c.gy);
+  c.path = [{x: start.x + d.dx*(steps-0.3)*L.cell, y: start.y + d.dy*(steps-0.3)*L.cell}];
+  S.grid[c.gy*cols+c.gx] = null;
+  S.history.push(c);
+  sfx.go();
+  insertSlot(c);
+}
+function tapBufferCar(c){
+  if(S.slots.length >= S.cap){ toast('槽位已满'); return; }
+  S.buffer.splice(S.buffer.indexOf(c),1);
+  sfx.go();
+  insertSlot(c);
+}
+function insertSlot(c){
+  c.state = 'slot';
+  let idx = -1;
+  for(let i=S.slots.length-1;i>=0;i--) if(S.slots[i].color===c.color){ idx=i; break; }
+  if(idx>=0) S.slots.splice(idx+1, 0, c); else S.slots.push(c);
+  const same = S.slots.filter(s => s.color===c.color);
+  if(same.length >= 3){
+    const now = performance.now();
+    const delay = c.path.length ? 420 : 200;
+    same.slice(0,3).forEach(s => {
+      const p = slotCenter(S.slots.indexOf(s), S.cap);
+      s.dieX = p.x; s.dieY = p.y; s.dieAt = now + delay;
+    });
+    S.slots = S.slots.filter(s => !same.slice(0,3).includes(s));
+    same.slice(0,3).forEach(s => { s.state='die'; s.path = s.path.length ? [s.path[0], {x:s.dieX, y:s.dieY}] : []; S.dying.push(s); });
+    S.history = S.history.filter(h => h.state==='slot');
+    setTimeout(() => { sfx.clear(); burst(same[1].dieX, same[1].dieY, PALETTE[c.color]); floatText(same[1].dieX, same[1].dieY - 30, '喵巴士 +1'); }, delay);
+  }
+  updateSub();
+  checkEnd();
+}
+function remaining(){ return S.cars.filter(c => c.state==='grid' || c.state==='slot' || c.state==='buffer').length; }
+function updateSub(){ if(S.level>2) $('#sub').textContent = `剩余 ${remaining()} 辆车`; }
+function checkEnd(){
+  if(S.over) return;
+  if(remaining()===0){
+    S.over = true;
+    setTimeout(showWin, 800);
+  } else if(S.slots.length >= S.cap){
+    S.over = true;
+    setTimeout(showLose, 500);
+  }
+}
+
+// ---------- 道具 ----------
+const PROPS = {
+  undo:{name:'撤回', can(){ return S.history.some(h => h.state==='slot'); }, run(){
+    const c = S.history.filter(h => h.state==='slot').pop();
+    S.history.splice(S.history.lastIndexOf(c),1);
+    S.slots.splice(S.slots.indexOf(c),1);
+    c.state='grid'; c.path=[]; S.grid[c.gy*S.cfg.cols+c.gx]=c;
+  }},
+  pop:{name:'移出3辆', can(){ return S.slots.length>0 && S.buffer.length < BUFFER_CAP; }, run(){ popToBuffer(3); }},
+  shuffle:{name:'洗牌', can(){ return S.cars.some(c=>c.state==='grid'); }, run(){
+    const g = S.cars.filter(c=>c.state==='grid');
+    const colors = shuffle(g.map(c=>c.color), Math.random);
+    g.forEach((c,i)=>{ c.color=colors[i]; c.scale=0.6; });
+  }},
+  extra:{name:'加一格', can(){ return S.cap===7; }, run(){ S.cap = 8; }},
+};
+function popToBuffer(n){
+  const take = Math.min(n, S.slots.length, BUFFER_CAP - S.buffer.length);
+  const moved = S.slots.splice(S.slots.length - take, take);
+  moved.forEach(c => { c.state='buffer'; c.path=[]; S.buffer.push(c); });
+  S.history = S.history.filter(h => h.state==='slot');
+}
+function useProp(key){
+  if(!S || S.over) return;
+  const p = PROPS[key];
+  if(S.used[key]){ toast(`本关「${p.name}」已用过`); return; }
+  if(!p.can()){ toast(`现在用不了「${p.name}」`); return; }
+  showRewardAd(`获得道具「${p.name}」`, () => {
+    S.used[key] = true; p.run(); refreshProps(); updateSub();
+  });
+}
+function refreshProps(){
+  document.querySelectorAll('.prop').forEach(b => {
+    const used = S && S.used[b.dataset.prop];
+    b.disabled = !!used;
+    b.querySelector('.badge').textContent = used ? '已用' : '📺';
+  });
+}
+
+// ---------- 广告（原型中为模拟） ----------
+function showRewardAd(rewardText, onReward){
+  let left = 3;
+  openDialog(`
+    <div class="adbox"><div>📺 激励视频广告（模拟）</div><b id="adCount">${left}</b><div style="font-size:12px;opacity:.7">正式版接入 wx.createRewardedVideoAd</div></div>
+    <p>看完可${rewardText}</p>
+    <button class="btn ghost" id="adSkip">放弃奖励</button>`);
+  const timer = setInterval(() => {
+    left--; const el = $('#adCount'); if(el) el.textContent = left;
+    if(left<=0){
+      clearInterval(timer);
+      meta.adViews++; refreshStats();
+      closeDialog(); onReward();
+    }
+  }, 1000);
+  $('#adSkip').onclick = () => { clearInterval(timer); closeDialog(); };
+}
+function showInterstitial(next){
+  meta.interstitials++; refreshStats();
+  openDialog(`<div class="adbox"><div>插屏广告（模拟）</div><div style="font-size:12px;opacity:.7">正式版接入 wx.createInterstitialAd</div></div>
+    <button class="btn ghost" id="isClose">关闭</button>`);
+  $('#isClose').onclick = () => { closeDialog(); next(); };
+}
+function refreshStats(){
+  $('#stats').textContent = `原型统计 · 激励视频 ${meta.adViews} 次 · 插屏 ${meta.interstitials} 次`;
+  $('#coins').textContent = meta.coins;
+}
+
+// ---------- 弹窗 ----------
+function openDialog(html){ dialog.innerHTML = html; mask.hidden = false; }
+function closeDialog(){ mask.hidden = true; dialog.innerHTML = ''; }
+function showWin(){
+  sfx.win();
+  const reward = 10 + S.level * 2;
+  meta.coins += reward; meta.level = S.level + 1;
+  store.set('coins', meta.coins); store.set('level', meta.level); refreshStats();
+  openDialog(`<div class="big">🎉</div><h2>过关啦！</h2><p>猫咪们全都坐上巴士回家了<br>获得 🪙 ${reward}</p>
+    <button class="btn ad" id="dbl">📺 看广告再领 🪙 ${reward}</button>
+    <button class="btn primary" id="next">下一关</button>`);
+  $('#dbl').onclick = () => showRewardAd(`再领 🪙 ${reward}`, () => {
+    meta.coins += reward; store.set('coins', meta.coins); refreshStats(); goNext();
+  });
+  $('#next').onclick = goNext;
+}
+function goNext(){
+  closeDialog();
+  const lv = meta.level;
+  // 第 3 关之后每 2 关一次插屏，新手期不打扰
+  if(lv > 3 && lv % 2 === 0) showInterstitial(() => newGame(lv)); else newGame(lv);
+}
+function showLose(){
+  sfx.lose();
+  const left = remaining();
+  const pct = Math.round((1 - left / S.total) * 100);
+  openDialog(`<div class="big">😿</div><h2>只差 ${left} 辆车！</h2><p>你已经完成了 ${pct}%，再坚持一下就能过关</p>
+    ${S.revived ? '' : '<button class="btn ad" id="revive">📺 看广告复活（移出 3 辆车）</button>'}
+    <button class="btn ghost" id="retry">重新开始</button>`);
+  const rv = $('#revive');
+  if(rv) rv.onclick = () => showRewardAd('复活一次', () => {
+    S.revived = true; S.over = false; popToBuffer(3);
+  });
+  $('#retry').onclick = () => { closeDialog(); newGame(S.level); };
+}
+
+// ---------- 特效 ----------
+function burst(x,y,color){
+  for(let i=0;i<18;i++){
+    const a = Math.random()*Math.PI*2, v = 80 + Math.random()*160;
+    S.particles.push({x,y,vx:Math.cos(a)*v, vy:Math.sin(a)*v - 60, life:0.7, max:0.7, color: i%3 ? color : '#FFFFFF', r: 3+Math.random()*3});
+  }
+}
+function floatText(x,y,text){ S.floats.push({x,y,text,life:1}); }
+
+// ---------- 输入 ----------
+canvas.addEventListener('pointerdown', e => {
+  if(!S || S.over || !mask.hidden) return;
+  const r = canvas.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  // 临时区
+  for(const c of S.buffer){
+    const p = bufCenter(S.buffer.indexOf(c));
+    if(Math.abs(x-p.x) < L.bufH/2 && Math.abs(y-p.y) < L.bufH/2){ tapBufferCar(c); return; }
+  }
+  // 停车场
+  if(x>=L.bx && y>=L.by && x<L.bx+L.bw && y<L.by+L.bh){
+    const gx = Math.floor((x-L.bx)/L.cell), gy = Math.floor((y-L.by)/L.cell);
+    const c = S.grid[gy*S.cfg.cols+gx];
+    if(c) tapGridCar(c);
+  }
+});
+document.querySelectorAll('.prop').forEach(b => b.addEventListener('click', () => useProp(b.dataset.prop)));
+$('#btnRestart').addEventListener('click', () => { if(mask.hidden) newGame(S.level); });
+window.addEventListener('resize', resize);
+
+// ---------- 绘制 ----------
+function shade(hex, f){
+  const n = parseInt(hex.slice(1),16);
+  let r=n>>16, g=n>>8&255, b=n&255;
+  r=Math.round(r*f); g=Math.round(g*f); b=Math.round(b*f);
+  return `rgb(${Math.min(255,r)},${Math.min(255,g)},${Math.min(255,b)})`;
+}
+function rr(x,y,w,h,r){
+  ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+}
+function drawCar(c, now){
+  const s = sizeOf(c);
+  let x = c.x, y = c.y, angle = DIRS[c.dir].a;
+  if(c.state==='slot' || c.state==='buffer' || c.state==='die'){ if(!c.path.length) angle = 0; }
+  if(c.shake && now - c.shake < 300){ const k = 1 - (now-c.shake)/300; x += Math.sin(now/18)*4*k; }
+  const color = PALETTE[c.color];
+  ctx.save(); ctx.translate(x,y); ctx.rotate(angle); ctx.scale(c.scale, c.scale);
+  const w = s*0.74, h = s*0.80, r = s*0.2;
+  // 阴影
+  ctx.fillStyle='rgba(60,40,20,.18)'; rr(-w/2+1, -h/2+4, w, h, r); ctx.fill();
+  // 耳朵（车头方向）
+  ctx.fillStyle = color; ctx.strokeStyle = shade(color,.7); ctx.lineWidth = Math.max(1.2, s*0.03);
+  for(const sx of [-1,1]){
+    ctx.beginPath();
+    ctx.moveTo(sx*w*0.42, -h*0.30); ctx.lineTo(sx*w*0.36, -h*0.66); ctx.lineTo(sx*w*0.08, -h*0.42);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFC4D6';
+    ctx.beginPath(); ctx.moveTo(sx*w*0.34, -h*0.36); ctx.lineTo(sx*w*0.33, -h*0.55); ctx.lineTo(sx*w*0.17, -h*0.42); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = color;
+  }
+  // 车身
+  rr(-w/2, -h/2, w, h, r); ctx.fill(); ctx.stroke();
+  // 车轮
+  ctx.fillStyle = '#3B2F2F';
+  for(const sx of [-1,1]) for(const sy of [-1,1]){ rr(sx*w/2 - s*0.05, sy*h*0.26 - s*0.07, s*0.10, s*0.14, s*0.03); ctx.fill(); }
+  // 车身浅色肚皮
+  ctx.fillStyle = 'rgba(255,255,255,.28)'; rr(-w*0.32, h*0.08, w*0.64, h*0.30, r*0.6); ctx.fill();
+  // 脸
+  ctx.fillStyle = '#2B2222';
+  ctx.beginPath(); ctx.arc(-w*0.18, -h*0.10, s*0.055, 0, Math.PI*2); ctx.arc(w*0.18, -h*0.10, s*0.055, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(-w*0.16, -h*0.13, s*0.02, 0, Math.PI*2); ctx.arc(w*0.20, -h*0.13, s*0.02, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#FF7A9C';
+  ctx.beginPath(); ctx.moveTo(-s*0.035, -h*0.02); ctx.lineTo(s*0.035, -h*0.02); ctx.lineTo(0, h*0.03); ctx.closePath(); ctx.fill();
+  // 方向箭头
+  ctx.fillStyle = 'rgba(255,255,255,.95)';
+  ctx.beginPath(); ctx.moveTo(0, -h*0.47); ctx.lineTo(s*0.07, -h*0.36); ctx.lineTo(-s*0.07, -h*0.36); ctx.closePath(); ctx.fill();
+  // 被挡住时的红色闪烁
+  if(c.flash && now - c.flash < 400){
+    ctx.fillStyle = `rgba(239,79,79,${0.5*(1-(now-c.flash)/400)})`; rr(-w/2, -h/2, w, h, r); ctx.fill();
+  }
+  ctx.restore();
+}
+function drawBoard(){
+  const {cols, rows} = S.cfg;
+  ctx.fillStyle = '#EADFD1'; rr(L.bx-8, L.by-8, L.bw+16, L.bh+16, 18); ctx.fill();
+  ctx.fillStyle = '#F6EFE6'; rr(L.bx-2, L.by-2, L.bw+4, L.bh+4, 14); ctx.fill();
+  ctx.strokeStyle = '#E3D5C3'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+  for(let i=1;i<cols;i++){ ctx.beginPath(); ctx.moveTo(L.bx+i*L.cell, L.by+4); ctx.lineTo(L.bx+i*L.cell, L.by+L.bh-4); ctx.stroke(); }
+  for(let j=1;j<rows;j++){ ctx.beginPath(); ctx.moveTo(L.bx+4, L.by+j*L.cell); ctx.lineTo(L.bx+L.bw-4, L.by+j*L.cell); ctx.stroke(); }
+  ctx.setLineDash([]);
+}
+function drawTray(){
+  const first = slotCenter(0, S.cap), last = slotCenter(S.cap-1, S.cap);
+  const pad = 8, s = L.slotSize;
+  ctx.fillStyle = '#7A5C48'; rr(first.x - s/2 - pad, L.trayY, last.x - first.x + s + pad*2, L.trayH, 16); ctx.fill();
+  for(let i=0;i<S.cap;i++){
+    const p = slotCenter(i, S.cap);
+    ctx.fillStyle = i===7 ? '#A07A5E' : '#5E4434'; rr(p.x - s/2, p.y - s/2, s, s, 10); ctx.fill();
+  }
+  if(S.slots.length >= S.cap - 2 && !S.over){
+    ctx.strokeStyle = `rgba(239,79,79,${0.5+0.5*Math.sin(performance.now()/150)})`; ctx.lineWidth = 3;
+    rr(first.x - s/2 - pad, L.trayY, last.x - first.x + s + pad*2, L.trayH, 16); ctx.stroke();
+  }
+  if(S.buffer.length){
+    ctx.fillStyle = 'rgba(122,92,72,.15)';
+    const b0 = bufCenter(0), b1 = bufCenter(BUFFER_CAP-1);
+    rr(b0.x - L.bufH/2 - 6, L.bufY - 4, b1.x - b0.x + L.bufH + 12, L.bufH + 8, 12); ctx.fill();
+    ctx.fillStyle = '#8A7563'; ctx.font = '11px sans-serif'; ctx.textAlign='left';
+    ctx.fillText('临时区（点击放回槽位）', b0.x - L.bufH/2, L.bufY - 8);
+  }
+}
+
+let last = performance.now();
+function frame(now){
+  const dt = Math.min(0.05, (now - last)/1000); last = now;
+  if(S){
+    // 更新位置
+    const speed = L.cell * 22;
+    for(const c of S.cars){
+      if(c.state==='gone') continue;
+      if(c.path.length){
+        const p = c.path[0], dx = p.x - c.x, dy = p.y - c.y, d = Math.hypot(dx,dy);
+        if(d <= speed*dt){ c.x = p.x; c.y = p.y; c.path.shift(); }
+        else { c.x += dx/d*speed*dt; c.y += dy/d*speed*dt; }
+      } else {
+        const t = c.state==='die' ? {x:c.dieX, y:c.dieY} : targetOf(c);
+        const k = Math.min(1, dt*16);
+        c.x += (t.x - c.x)*k; c.y += (t.y - c.y)*k;
+      }
+      if(c.state!=='die' && c.scale < 1) c.scale = Math.min(1, c.scale + dt*5);
+      if(c.state==='die' && now > c.dieAt){
+        c.scale -= dt*5;
+        if(c.scale <= 0){ c.state='gone'; S.dying.splice(S.dying.indexOf(c),1); }
+      }
+    }
+    for(const p of S.particles){ p.life -= dt; p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 400*dt; }
+    S.particles = S.particles.filter(p => p.life > 0);
+    for(const f of S.floats){ f.life -= dt; f.y -= 40*dt; }
+    S.floats = S.floats.filter(f => f.life > 0);
+
+    // 绘制
+    ctx.clearRect(0,0,W,H);
+    drawBoard(); drawTray();
+    const grid = S.cars.filter(c => c.state==='grid');
+    const rest = S.cars.filter(c => c.state==='slot' || c.state==='buffer' || c.state==='die');
+    grid.forEach(c => drawCar(c, now));
+    rest.filter(c => !c.path.length).forEach(c => drawCar(c, now));
+    rest.filter(c => c.path.length).forEach(c => drawCar(c, now));
+    for(const p of S.particles){
+      ctx.globalAlpha = Math.max(0, p.life/p.max); ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    for(const f of S.floats){
+      ctx.globalAlpha = Math.max(0, f.life); ctx.fillStyle = '#FF6B3D';
+      ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(f.text, f.x, f.y);
+    }
+    ctx.globalAlpha = 1;
+  }
+  requestAnimationFrame(frame);
+}
+
+// ---------- 启动 ----------
+resize();
+newGame(meta.level);
+requestAnimationFrame(frame);
+
+// 调试入口：控制台里 mlgc.go(5) 跳关
+window.mlgc = { go(n){ closeDialog(); newGame(n); }, state: () => S };
+})();
+</script>
+</body>
+</html>
