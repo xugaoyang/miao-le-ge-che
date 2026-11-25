@@ -8,49 +8,63 @@
   :root{
     --bg:#FFF4E6; --bg2:#FFE7CC; --ink:#3B2F2F; --muted:#8A7563;
     --card:#FFFFFF; --accent:#FF8A3D; --accent2:#FF6B6B; --ok:#2DBE7E;
-    --lot:#EDE3D6; --line:#D9CBB8; --tray:#7A5C48;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
   html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
     font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
   #app{position:relative;height:100%;max-width:480px;margin:0 auto;display:flex;flex-direction:column;
     background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
-  header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 4px;gap:8px}
+  header{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 4px;gap:6px}
   .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-size:14px;font-weight:600;
-    box-shadow:0 2px 0 rgba(0,0,0,.08)}
-  #levelLabel{font-size:18px;font-weight:800;letter-spacing:1px}
-  .iconbtn{border:0;background:var(--card);border-radius:12px;width:38px;height:38px;font-size:18px;
-    box-shadow:0 2px 0 rgba(0,0,0,.1);cursor:pointer}
-  #sub{text-align:center;font-size:12px;color:var(--muted);min-height:16px}
+    box-shadow:0 2px 0 rgba(0,0,0,.08);min-width:72px}
+  #levelLabel{font-size:18px;font-weight:800;letter-spacing:1px;white-space:nowrap}
+  .tools{display:flex;gap:6px}
+  .iconbtn{border:0;background:var(--card);border-radius:12px;width:36px;height:36px;font-size:17px;
+    box-shadow:0 2px 0 rgba(0,0,0,.1);cursor:pointer;padding:0}
+  #sub{text-align:center;font-size:12px;color:var(--muted);min-height:16px;padding:0 12px}
   #stage{flex:1;position:relative;min-height:0}
   canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
   #props{display:flex;justify-content:space-around;padding:8px 12px 6px}
   .prop{position:relative;border:0;background:var(--card);border-radius:16px;width:72px;height:64px;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:22px;
     box-shadow:0 3px 0 rgba(0,0,0,.12);cursor:pointer;color:var(--ink)}
+  .prop i{font-style:normal}
   .prop span{font-size:12px;font-weight:600}
   .prop:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.12)}
-  .prop[disabled]{opacity:.4}
-  .badge{position:absolute;top:-6px;right:-6px;background:var(--accent2);color:#fff;font-size:10px;
-    border-radius:999px;padding:2px 6px;font-weight:700}
-  #toast{position:absolute;left:50%;top:84px;transform:translateX(-50%);background:rgba(59,47,47,.92);color:#fff;
+  .prop.locked{opacity:.45}
+  .badge{position:absolute;top:-6px;right:-6px;background:var(--accent2);color:#fff;font-size:11px;font-style:normal;
+    border-radius:999px;padding:2px 7px;font-weight:700;min-width:20px}
+  .badge.count{background:#3B82F6}
+  .badge:empty{display:none}
+  #toast{position:absolute;left:50%;top:56px;transform:translateX(-50%);background:rgba(59,47,47,.92);color:#fff;
     padding:8px 16px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;
     white-space:nowrap;z-index:5}
   #toast.show{opacity:1}
   .mask{position:absolute;inset:0;background:rgba(40,30,25,.55);display:flex;align-items:center;justify-content:center;z-index:10;padding:16px}
   .mask[hidden]{display:none}
   .dialog{background:var(--card);border-radius:24px;padding:24px 20px;width:100%;max-width:340px;text-align:center;
-    box-shadow:0 10px 30px rgba(0,0,0,.25)}
-  .dialog h2{margin:0 0 6px;font-size:26px}
-  .dialog p{margin:6px 0 16px;color:var(--muted);font-size:14px;line-height:1.5}
-  .big{font-size:56px;line-height:1.1}
+    box-shadow:0 10px 30px rgba(0,0,0,.25);max-height:90%;overflow:auto}
+  .dialog h2{margin:0 0 6px;font-size:24px}
+  .dialog p{margin:6px 0 14px;color:var(--muted);font-size:14px;line-height:1.5}
+  .big{font-size:52px;line-height:1.1}
   .btn{display:block;width:100%;border:0;border-radius:14px;padding:13px;font-size:16px;font-weight:700;margin-top:10px;cursor:pointer}
+  .btn[disabled]{opacity:.45}
   .btn.primary{background:var(--accent);color:#fff;box-shadow:0 3px 0 #D9682A}
   .btn.ad{background:var(--ok);color:#fff;box-shadow:0 3px 0 #1F9A63}
   .btn.ghost{background:#F3ECE4;color:var(--ink)}
-  .adbox{background:#222;color:#fff;border-radius:16px;height:180px;display:flex;flex-direction:column;
+  .adbox{background:#222;color:#fff;border-radius:16px;height:170px;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
   .adbox b{font-size:40px}
+  .dex{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0 4px}
+  .dexcard{background:#FBF6F0;border-radius:14px;padding:10px 8px;display:flex;align-items:center;gap:8px;text-align:left}
+  .dexcard.locked{opacity:.45}
+  .dexcard.max{background:#FFF1C9}
+  .dexicon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:18px;font-weight:800;flex:none}
+  .dexcard b{display:block;font-size:14px}
+  .dexcard small{font-size:11px;color:var(--muted)}
+  .bar{height:5px;background:#EADFD1;border-radius:9px;margin-top:4px;overflow:hidden}
+  .bar i{display:block;height:100%;background:var(--accent)}
   #stats{text-align:center;font-size:10px;color:var(--muted);opacity:.7;pointer-events:none;
     padding-bottom:calc(6px + env(safe-area-inset-bottom))}
 </style>
@@ -60,15 +74,19 @@
   <header>
     <div class="pill">🪙 <b id="coins">0</b></div>
     <div id="levelLabel">第 1 关</div>
-    <button class="iconbtn" id="btnRestart" title="重新开始" aria-label="重新开始">↻</button>
+    <div class="tools">
+      <button class="iconbtn" id="btnDex" title="猫咪图鉴" aria-label="猫咪图鉴">📖</button>
+      <button class="iconbtn" id="btnSound" title="声音" aria-label="声音开关">🔊</button>
+      <button class="iconbtn" id="btnRestart" title="重新开始" aria-label="重新开始">↻</button>
+    </div>
   </header>
-  <div id="sub">点击小猫车，让它开出停车场</div>
+  <div id="sub"></div>
   <div id="stage"><canvas id="c"></canvas></div>
   <div id="props">
-    <button class="prop" data-prop="undo"><i>↩️</i><span>撤回</span><em class="badge">📺</em></button>
-    <button class="prop" data-prop="pop"><i>🏗️</i><span>移出3辆</span><em class="badge">📺</em></button>
-    <button class="prop" data-prop="shuffle"><i>🔀</i><span>洗牌</span><em class="badge">📺</em></button>
-    <button class="prop" data-prop="extra"><i>➕</i><span>加一格</span><em class="badge">📺</em></button>
+    <button class="prop" data-prop="undo"><i>↩️</i><span>撤回</span><em class="badge"></em></button>
+    <button class="prop" data-prop="pop"><i>🏗️</i><span>移出3辆</span><em class="badge"></em></button>
+    <button class="prop" data-prop="shuffle"><i>🔀</i><span>洗牌</span><em class="badge"></em></button>
+    <button class="prop" data-prop="extra"><i>➕</i><span>加一格</span><em class="badge"></em></button>
   </div>
   <div id="stats"></div>
   <div id="toast"></div>
@@ -80,7 +98,10 @@
 'use strict';
 
 // ---------- 基础配置 ----------
-const PALETTE = ['#FF9F43','#5B8DEF','#FF6FAE','#34C77B','#A66CFF','#F5C518','#EF4F4F','#19B8B0','#9C6B45'];
+// 7 种颜色，每种配一个符号，辨色困难 / 色弱玩家也能靠符号区分
+const PALETTE = ['#FF9F43','#4D8DF7','#FF6FAE','#2FBF71','#9D6BFF','#F2C230','#9AA6B2'];
+const SYMBOLS = ['●','★','♥','▲','◆','✚','☾'];
+const CAT_NAMES = ['橘子','蓝莓','桃桃','抹茶','葡萄','柠檬','汤圆'];
 const DIRS = [
   {dx:0, dy:-1, a:0},            // 上
   {dx:1, dy:0,  a:Math.PI/2},    // 右
@@ -88,6 +109,7 @@ const DIRS = [
   {dx:-1,dy:0,  a:-Math.PI/2},   // 左
 ];
 const BUFFER_CAP = 6;
+const PROP_UNLOCK_LEVEL = 3;
 
 function mulberry32(seed){
   return function(){
@@ -99,82 +121,149 @@ function mulberry32(seed){
 }
 function shuffle(arr, R){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(R()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
 
-// 关卡参数：第1关极简，第2关难度断崖，之后循序渐进
+// 关卡参数：锯齿形难度曲线，每 5 关一个 Boss 关，Boss 后一关放松
+// outward：车头朝向最近边缘的概率，越低遮挡越深
 function levelCfg(n){
-  if(n===1) return {cols:4,rows:5,cars:9, colors:3,chunk:9};
-  if(n===2) return {cols:7,rows:9,cars:60,colors:9,chunk:9};
+  if(n===1) return {cols:4,rows:5,cars:9, colors:3,chunk:9,longP:0,   outward:1,   boss:false};
+  if(n===2) return {cols:5,rows:6,cars:18,colors:4,chunk:6,longP:0.12,outward:0.6, boss:false};
+  const boss = n % 5 === 0, relax = n % 5 === 1;
+  const k = Math.min(n, 30);
+  const cars = Math.min(27 + Math.floor(k*0.8) + (boss ? 6 : 0) - (relax ? 6 : 0), 51);
+  const longP = Math.min(0.12 + k*0.006, 0.25);
+  const dens = Math.min(0.85 + k*0.004, 0.95);       // 停车场密度越高，遮挡越深
+  const cols = cars > 36 ? 7 : 6;
+  const rows = Math.max(7, Math.min(10, Math.ceil(cars*(1+longP) / (cols*dens))));
   return {
-    cols: 6 + (n % 2),
-    rows: 8 + (n % 3 ? 1 : 0),
-    cars: Math.min(27 + n * 3, 57),
-    colors: Math.min(5 + Math.floor(n / 2), 9),
-    chunk: n % 3 === 0 ? 9 : 6,
+    cols, rows, cars, longP,
+    colors: Math.min(4 + Math.floor(k/3) + (boss ? 1 : 0), 7),
+    chunk: (boss || k >= 8) ? 9 : 6,
+    outward: Math.max(0.5 - k*0.01 - (boss ? 0.1 : 0) + (relax ? 0.1 : 0), 0.2),
+    boss,
   };
 }
 
-// 关卡生成：按“离场顺序”逆向摆放，保证每辆车都存在可开出的顺序；
-// 颜色按离场顺序分块分配，每块最多 3 种颜色 → 按该顺序操作槽位最多占 6 格，保证 7 格可解。
+// 关卡生成：先随机密铺小车，再模拟“逐辆开走”求解；
+// 卡死时把某辆车掉头（只改方向不改占位，不影响之前已开走的车），仍不行就移除它。
+// 这样开局可点的车少、遮挡链深，同时保证一定有解。
+// 颜色按求出的离场顺序分块分配（每块最多 3 色）→ 按该顺序操作槽位最多占 6 格，保证 7 格可解。
 function genLevel(n){
   const cfg = levelCfg(n);
   const R = mulberry32(n * 1000 + 17);
   const {cols, rows} = cfg;
-  const occ = new Array(cols*rows).fill(false);
-  const placed = [];
-  const rayFree = (x,y,d) => {
-    let cx=x+d.dx, cy=y+d.dy;
-    while(cx>=0 && cy>=0 && cx<cols && cy<rows){ if(occ[cy*cols+cx]) return false; cx+=d.dx; cy+=d.dy; }
+  const occ = new Array(cols*rows).fill(null);
+  const inB = (x,y) => x>=0 && y>=0 && x<cols && y<rows;
+  const cellsFor = (x,y,di,len) => {
+    const d = DIRS[di], out = [];
+    for(let j=0;j<len;j++){ const bx=x-d.dx*j, by=y-d.dy*j; if(!inB(bx,by) || occ[by*cols+bx]) return null; out.push(by*cols+bx); }
+    return out;
+  };
+  const pickDir = (x,y) => {
+    if(R() < cfg.outward){
+      const ds = [y, cols-1-x, rows-1-y, x], m = Math.min(...ds);
+      const opts = [0,1,2,3].filter(i => ds[i]===m);
+      return opts[Math.floor(R()*opts.length)];
+    }
+    return Math.floor(R()*4);
+  };
+  let cars = [];
+  for(const k of shuffle([...Array(cols*rows).keys()], R)){
+    if(cars.length >= cfg.cars) break;
+    if(occ[k]) continue;
+    const x=k%cols, y=(k/cols)|0, di = pickDir(x,y);
+    let len = R() < cfg.longP ? 2 : 1;
+    let cells = cellsFor(x,y,di,len);
+    if(!cells && len===2){ len = 1; cells = cellsFor(x,y,di,1); }
+    if(!cells) continue;
+    const car = {x, y, dir:di, len, cells};
+    cells.forEach(c => occ[c] = car); cars.push(car);
+  }
+  const occ0 = occ.slice(); // 开局占位快照
+  const freeIn = (grid, c) => {
+    const d = DIRS[c.dir]; let x=c.x+d.dx, y=c.y+d.dy;
+    while(inB(x,y)){ const o = grid[y*cols+x]; if(o && o!==c) return false; x+=d.dx; y+=d.dy; }
     return true;
   };
-  for(let i=0;i<cfg.cars;i++){
-    const cells=[]; for(let k=0;k<occ.length;k++) if(!occ[k]) cells.push(k);
-    shuffle(cells,R);
-    let ok=false;
-    for(const k of cells){
-      const x=k%cols, y=(k/cols)|0;
-      for(const di of shuffle([0,1,2,3],R)){
-        if(rayFree(x,y,DIRS[di])){ occ[k]=true; placed.push({x,y,dir:di}); ok=true; break; }
-      }
-      if(ok) break;
+  const isFree = c => freeIn(occ, c);
+  const setDir = (c, di) => {
+    if(c.len===2){ const back = c.cells[1]; c.cells = [back, c.cells[0]]; c.x = back%cols; c.y = (back/cols)|0; }
+    c.dir = di;
+  };
+  const order = [], alive = new Set(cars);
+  while(alive.size){
+    const free = [...alive].filter(isFree);
+    if(free.length){
+      const c = free[Math.floor(R()*free.length)];
+      alive.delete(c); c.cells.forEach(k => occ[k] = null); order.push(c);
+      continue;
     }
-    if(!ok) break;
+    // 优先选“现在能走、但开局被挡”的掉头方案，避免修复时制造开局就能开走的车
+    let fixed = false;
+    for(const strict of [true, false]){
+      for(const c of shuffle([...alive], R)){
+        const opts = c.len===2 ? [(c.dir+2)%4] : shuffle([0,1,2,3].filter(d => d!==c.dir), R);
+        for(const di of opts){
+          const old = {dir:c.dir, x:c.x, y:c.y, cells:c.cells};
+          setDir(c, di);
+          if(isFree(c) && (!strict || !freeIn(occ0, c))){ fixed = true; break; }
+          Object.assign(c, old);
+        }
+        if(fixed) break;
+      }
+      if(fixed) break;
+    }
+    if(!fixed){ const c = [...alive][0]; alive.delete(c); c.cells.forEach(k => occ[k] = null); cars = cars.filter(x => x!==c); }
   }
-  while(placed.length % 3) placed.pop();
-  const order = placed.slice().reverse(); // 离场顺序
+  while(order.length % 3){ const c = order.pop(); cars = cars.filter(x => x!==c); }
   for(let i=0;i<order.length;){
     const size = Math.min(cfg.chunk, order.length - i);
-    const k = size / 3;
-    const colorIds = shuffle([...Array(cfg.colors).keys()], R).slice(0, k);
+    const colorIds = shuffle([...Array(cfg.colors).keys()], R).slice(0, size/3);
     const arr = []; colorIds.forEach(c => arr.push(c,c,c)); shuffle(arr, R);
     for(let j=0;j<size;j++) order[i+j].color = arr[j];
     i += size;
   }
-  return {cfg, cars: placed};
+  return {cfg, cars: cars.map(p => ({x:p.x, y:p.y, dir:p.dir, len:p.len, cells:p.cells.slice(), color:p.color}))};
 }
 
 // ---------- 存档（失败时降级为内存） ----------
 const store = {
-  get(k, d){ try{ const v = localStorage.getItem('mlgc_'+k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
-  set(k, v){ try{ localStorage.setItem('mlgc_'+k, JSON.stringify(v)); }catch(e){} },
+  get(k, d){ try{ const v = localStorage.getItem('mlgc2_'+k); return v==null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('mlgc2_'+k, JSON.stringify(v)); }catch(e){} },
 };
+const meta = {
+  level: store.get('level', 1),
+  coins: store.get('coins', 0),
+  inv: store.get('inv', {undo:0, pop:0, shuffle:0, extra:0}),
+  dex: store.get('dex', [0,0,0,0,0,0,0]),
+  dexClaimed: store.get('dexClaimed', [0,0,0,0,0,0,0]),
+  gift: store.get('gift', false),
+  sound: store.get('sound', true),
+  adViews: 0, interstitials: 0,
+};
+function save(){ ['level','coins','inv','dex','dexClaimed','gift','sound'].forEach(k => store.set(k, meta[k])); }
 
 // ---------- 音效 ----------
 let actx = null;
-function beep(freq, dur=0.08, type='sine', vol=0.08){
+function beep(freq, dur=0.08, type='sine', vol=0.08, delay=0){
+  if(!meta.sound) return;
   try{
     if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = actx.currentTime + delay;
     const o = actx.createOscillator(), g = actx.createGain();
-    o.type = type; o.frequency.value = freq;
-    g.gain.setValueAtTime(vol, actx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
-    o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + dur);
+    o.type = type; o.frequency.setValueAtTime(freq, t0);
+    g.gain.setValueAtTime(vol, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + dur);
   }catch(e){}
 }
+function vibrate(ms){ try{ if(meta.sound && navigator.vibrate) navigator.vibrate(ms); }catch(e){} }
 const sfx = {
-  go(){ beep(520,.07,'triangle'); setTimeout(()=>beep(780,.07,'triangle'),50); },
-  bump(){ beep(140,.12,'square',.05); try{navigator.vibrate&&navigator.vibrate(30);}catch(e){} },
-  clear(){ [660,880,1100].forEach((f,i)=>setTimeout(()=>beep(f,.1,'triangle',.07),i*60)); try{navigator.vibrate&&navigator.vibrate(15);}catch(e){} },
-  win(){ [523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.15,'triangle',.08),i*110)); },
-  lose(){ [400,300,200].forEach((f,i)=>setTimeout(()=>beep(f,.18,'sawtooth',.04),i*130)); },
+  go(){ beep(520,.07,'triangle'); beep(780,.07,'triangle',.08,.05); },
+  bonk(){ beep(110,.16,'square',.07); beep(70,.12,'square',.05,.04); vibrate(40); },
+  clear(combo){ const b = 660 * Math.pow(1.12, Math.min(combo,6)); [0,1,2].forEach(i => beep(b*Math.pow(1.26,i),.1,'triangle',.07,i*.06)); vibrate(15); },
+  horn(){ beep(392,.12,'square',.04); beep(392,.12,'square',.04,.16); },
+  heart(){ beep(70,.09,'sine',.18); beep(62,.09,'sine',.14,.14); },
+  win(){ [523,659,784,1046].forEach((f,i) => beep(f,.15,'triangle',.08,i*.11)); },
+  lose(){ [400,300,200].forEach((f,i) => beep(f,.18,'sawtooth',.04,i*.13)); },
 };
 
 // ---------- DOM ----------
@@ -183,38 +272,48 @@ const canvas = $('#c'), ctx = canvas.getContext('2d');
 const stage = $('#stage');
 const mask = $('#mask'), dialog = $('#dialog');
 let toastTimer = 0;
-function toast(msg, ms=1600){
+function toast(msg, ms=1800){
   const t=$('#toast'); t.textContent=msg; t.classList.add('show');
   clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'), ms);
 }
 
 // ---------- 状态 ----------
 let S = null;
-let W=0, H=0, DPR=1, L=null; // 画布尺寸与布局
-const meta = {
-  level: store.get('level', 1),
-  coins: store.get('coins', 0),
-  adViews: 0, interstitials: 0,
-};
+let W=0, H=0, DPR=1, L=null;
+let press = null; // 长按预览
 
 function newGame(level){
   const {cfg, cars} = genLevel(level);
   const grid = new Array(cfg.cols*cfg.rows).fill(null);
-  const list = cars.map((c,i) => {
-    const car = {id:i, color:c.color, dir:c.dir, gx:c.x, gy:c.y, x:0, y:0, path:[], state:'grid', scale:1, shake:0, flash:0, dieAt:0};
-    grid[c.y*cfg.cols+c.x] = car;
+  S = {level, cfg, grid, cars:[], slots:[], buffer:[], buses:[], particles:[], floats:[],
+       cap:7, history:[], revives:0, over:false, total:0,
+       combo:0, lastClear:0, lastBeat:0, tutorial: level===1, extraUsed:false};
+  S.cars = cars.map((c,i) => {
+    const car = {id:i, color:c.color, dir:c.dir, len:c.len, cells:c.cells.slice(), fx:c.x, fy:c.y,
+      x:0, y:0, dl:0, dw:0, ang:DIRS[c.dir].a, path:[], state:'grid', scale:0, bump:null, flash:0, bang:0};
+    car.cells.forEach(k => grid[k] = car);
     return car;
   });
-  S = {level, cfg, grid, cars:list, slots:[], buffer:[], dying:[], particles:[], floats:[],
-       cap:7, history:[], revived:false, used:{}, over:false, total:list.length};
+  S.total = S.cars.length;
+  press = null;
   layout();
-  list.forEach(c => { const p = cellCenter(c.gx,c.gy); c.x=p.x; c.y=p.y; c.scale=0; });
-  list.forEach((c,i)=> setTimeout(()=>{ c.scale=1; }, 8*i)); // 入场逐个弹出
-  $('#levelLabel').textContent = `第 ${level} 关`;
-  $('#sub').textContent = level===1 ? '点击小猫车，让它开出停车场；凑齐 3 辆同色就能坐巴士走～'
-                        : level===2 ? '⚠️ 难度断崖关：先想好再点！'
-                        : `剩余 ${S.total} 辆车`;
-  if(level===2) toast('⚠️ 第 2 关是难度断崖关，祝你好运', 2400);
+  S.cars.forEach((c,i) => {
+    const p = homeOf(c), d = dimsOf(c);
+    c.x=p.x; c.y=p.y; c.dl=d.l; c.dw=d.w;
+    c.appear = performance.now() + 10*i;
+  });
+  $('#levelLabel').textContent = cfg.boss ? `👑 第 ${level} 关` : `第 ${level} 关`;
+  const tips = {
+    1: '点小猫车，它会朝车头方向开走',
+    2: '凑齐 3 辆同色小车，猫咪巴士就来接走它们',
+    3: '小技巧：按住小车不放，可以预览它的路线',
+  };
+  $('#sub').textContent = tips[level] || (cfg.boss ? '👑 Boss 关：奖励翻倍！' : `剩余 ${S.total} 辆车`);
+  if(cfg.boss) toast('👑 Boss 关！过关金币翻倍', 2200);
+  if(level >= PROP_UNLOCK_LEVEL && !meta.gift){
+    meta.gift = true; ['undo','pop','shuffle','extra'].forEach(k => meta.inv[k] += 1); save();
+    setTimeout(() => toast('🎁 道具已解锁，每种送你 1 个！', 2400), 400);
+  }
   refreshProps(); refreshStats();
 }
 
@@ -232,59 +331,69 @@ function layout(){
   const slotSize = Math.min((W - 40) / 8, 50);
   const trayH = slotSize + 16;
   const bufH = slotSize * 0.9;
-  const bottomBlock = trayH + bufH + 22;
-  const cell = Math.min((W - 24) / cols, (H - bottomBlock - 16) / rows, 64);
+  const bottomBlock = trayH + bufH + 26;
+  const cell = Math.min((W - 28) / cols, (H - bottomBlock - 20) / rows, 64);
   const bw = cell*cols, bh = cell*rows;
-  const bx = (W - bw)/2, by = Math.max(8, (H - bottomBlock - bh)/2);
+  const freeH = H - bottomBlock - bh;
+  const bx = (W - bw)/2, by = Math.max(12, freeH * 0.7); // 棋盘靠近槽位，减少视线移动
   const trayY = H - trayH - 8;
-  const bufY = trayY - bufH - 6;
+  const bufY = trayY - bufH - 8;
   L = {cell, bx, by, bw, bh, slotSize, trayY, trayH, bufY, bufH};
 }
-function cellCenter(gx,gy){ return {x: L.bx + (gx+.5)*L.cell, y: L.by + (gy+.5)*L.cell}; }
+function cellCenter(k){ const c = S.cfg.cols; return {x: L.bx + (k%c + .5)*L.cell, y: L.by + (((k/c)|0) + .5)*L.cell}; }
+function homeOf(c){
+  let x=0, y=0; c.cells.forEach(k => { const p = cellCenter(k); x+=p.x; y+=p.y; });
+  return {x: x/c.cells.length, y: y/c.cells.length};
+}
 function slotCenter(i, cap){
-  const n = cap, gap = 4;
-  const total = n*L.slotSize + (n-1)*gap;
-  const x0 = (W - total)/2;
-  return {x: x0 + i*(L.slotSize+gap) + L.slotSize/2, y: L.trayY + L.trayH/2};
+  const gap = 4, total = cap*L.slotSize + (cap-1)*gap;
+  return {x: (W-total)/2 + i*(L.slotSize+gap) + L.slotSize/2, y: L.trayY + L.trayH/2};
 }
 function bufCenter(i){
-  const gap = 6, s = L.bufH;
-  const total = BUFFER_CAP*s + (BUFFER_CAP-1)*gap;
-  const x0 = (W - total)/2;
-  return {x: x0 + i*(s+gap) + s/2, y: L.bufY + s/2};
+  const gap = 6, s = L.bufH, total = BUFFER_CAP*s + (BUFFER_CAP-1)*gap;
+  return {x: (W-total)/2 + i*(s+gap) + s/2, y: L.bufY + s/2};
 }
 function targetOf(c){
-  if(c.state==='grid') return cellCenter(c.gx,c.gy);
+  if(c.state==='grid') return homeOf(c);
   if(c.state==='slot') return slotCenter(S.slots.indexOf(c), S.cap);
   if(c.state==='buffer') return bufCenter(S.buffer.indexOf(c));
   return {x:c.x, y:c.y};
 }
-function sizeOf(c){
-  if(c.state==='grid') return L.cell;
-  if(c.state==='buffer') return L.bufH;
-  if(c.state==='die') return L.slotSize;
-  return c.path.length ? Math.min(L.cell, L.slotSize*1.1) : L.slotSize;
+function dimsOf(c){
+  if(c.state==='grid' || c.path.length) return {l: c.len*L.cell - L.cell*0.14, w: L.cell*0.72, a: DIRS[c.dir].a};
+  const s = (c.state==='buffer' ? L.bufH : L.slotSize) * 0.86;
+  return {l:s, w:s, a:0};
 }
 
 // ---------- 规则 ----------
 function blockerOf(c){
   const {cols, rows} = S.cfg, d = DIRS[c.dir];
-  let x=c.gx+d.dx, y=c.gy+d.dy;
-  while(x>=0 && y>=0 && x<cols && y<rows){ const o = S.grid[y*cols+x]; if(o) return o; x+=d.dx; y+=d.dy; }
-  return null;
+  let x=c.fx+d.dx, y=c.fy+d.dy, steps=0;
+  while(x>=0 && y>=0 && x<cols && y<rows){
+    const o = S.grid[y*cols+x]; if(o && o!==c) return {car:o, steps};
+    x+=d.dx; y+=d.dy; steps++;
+  }
+  return {car:null, steps};
 }
+function freeCars(){ return S.cars.filter(c => c.state==='grid' && !blockerOf(c).car); }
+
 function tapGridCar(c){
   if(S.slots.length >= S.cap) return;
   const b = blockerOf(c);
-  if(b){ c.shake = performance.now(); b.flash = performance.now(); sfx.bump(); return; }
-  const {cols, rows} = S.cfg, d = DIRS[c.dir];
-  // 先沿车头方向开出停车场，再飞入槽位
-  let steps = 0, x=c.gx, y=c.gy;
-  while(x>=0 && y>=0 && x<cols && y<rows){ x+=d.dx; y+=d.dy; steps++; }
-  const start = cellCenter(c.gx, c.gy);
-  c.path = [{x: start.x + d.dx*(steps-0.3)*L.cell, y: start.y + d.dy*(steps-0.3)*L.cell}];
-  S.grid[c.gy*cols+c.gx] = null;
+  if(b.car){
+    // 冲到挡路车前再弹回来
+    c.bump = {t: performance.now(), dist: Math.max(0.14, b.steps) * L.cell};
+    b.car.bang = performance.now() + 110;
+    setTimeout(sfx.bonk, 100);
+    return;
+  }
+  const d = DIRS[c.dir], h = homeOf(c);
+  const out = b.steps + 0.6 + (c.len-1)*0.5;
+  c.path = [{x: h.x + d.dx*out*L.cell, y: h.y + d.dy*out*L.cell}];
+  c.speed = L.cell * 10; // 起步慢，逐渐加速
+  c.cells.forEach(k => S.grid[k] = null);
   S.history.push(c);
+  if(S.tutorial) S.tutorialStep = (S.tutorialStep||0) + 1;
   sfx.go();
   insertSlot(c);
 }
@@ -301,48 +410,57 @@ function insertSlot(c){
   if(idx>=0) S.slots.splice(idx+1, 0, c); else S.slots.push(c);
   const same = S.slots.filter(s => s.color===c.color);
   if(same.length >= 3){
+    const trio = same.slice(0,3);
     const now = performance.now();
-    const delay = c.path.length ? 420 : 200;
-    same.slice(0,3).forEach(s => {
-      const p = slotCenter(S.slots.indexOf(s), S.cap);
-      s.dieX = p.x; s.dieY = p.y; s.dieAt = now + delay;
-    });
-    S.slots = S.slots.filter(s => !same.slice(0,3).includes(s));
-    same.slice(0,3).forEach(s => { s.state='die'; s.path = s.path.length ? [s.path[0], {x:s.dieX, y:s.dieY}] : []; S.dying.push(s); });
+    S.combo = (now - S.lastClear < 3000) ? S.combo + 1 : 1;
+    S.lastClear = now;
+    trio.forEach(s => { const p = slotCenter(S.slots.indexOf(s), S.cap); s.dieX = p.x; s.dieY = p.y; });
+    S.slots = S.slots.filter(s => !trio.includes(s));
+    trio.forEach(s => { s.state = 'die'; if(s.path.length) s.path = [s.path[0], {x:s.dieX, y:s.dieY}]; });
     S.history = S.history.filter(h => h.state==='slot');
-    setTimeout(() => { sfx.clear(); burst(same[1].dieX, same[1].dieY, PALETTE[c.color]); floatText(same[1].dieX, same[1].dieY - 30, '喵巴士 +1'); }, delay);
+    callBus(trio, c.path.length ? 380 : 120, S.combo);
   }
   updateSub();
   checkEnd();
 }
+
+// 猫咪巴士：开进来 → 3 只猫上车 → 开走
+function callBus(trio, delay, combo){
+  const cx = trio.reduce((a,s) => a + s.dieX, 0) / 3;
+  const bus = {cats:trio, color:trio[0].color, cx, start: performance.now() + delay, x: W + 200, seated:0, combo, fx:false};
+  trio.forEach(s => s.bus = bus);
+  S.buses.push(bus);
+}
+function busDims(){ return {w: L.slotSize*3.4, h: L.slotSize*1.0, y: L.trayY - L.slotSize*0.5 - 8}; }
+
 function remaining(){ return S.cars.filter(c => c.state==='grid' || c.state==='slot' || c.state==='buffer').length; }
-function updateSub(){ if(S.level>2) $('#sub').textContent = `剩余 ${remaining()} 辆车`; }
+function updateSub(){
+  if(S.level > 3 && !S.cfg.boss) $('#sub').textContent = `剩余 ${remaining()} 辆车`;
+  else if(S.cfg.boss) $('#sub').textContent = `👑 Boss 关 · 剩余 ${remaining()} 辆车`;
+}
 function checkEnd(){
   if(S.over) return;
-  if(remaining()===0){
-    S.over = true;
-    setTimeout(showWin, 800);
-  } else if(S.slots.length >= S.cap){
-    S.over = true;
-    setTimeout(showLose, 500);
-  }
+  if(remaining()===0){ S.over = true; setTimeout(showWin, 1400); }
+  else if(S.slots.length >= S.cap){ S.over = true; setTimeout(showLose, 500); }
 }
 
 // ---------- 道具 ----------
 const PROPS = {
-  undo:{name:'撤回', can(){ return S.history.some(h => h.state==='slot'); }, run(){
-    const c = S.history.filter(h => h.state==='slot').pop();
-    S.history.splice(S.history.lastIndexOf(c),1);
-    S.slots.splice(S.slots.indexOf(c),1);
-    c.state='grid'; c.path=[]; S.grid[c.gy*S.cfg.cols+c.gx]=c;
-  }},
-  pop:{name:'移出3辆', can(){ return S.slots.length>0 && S.buffer.length < BUFFER_CAP; }, run(){ popToBuffer(3); }},
-  shuffle:{name:'洗牌', can(){ return S.cars.some(c=>c.state==='grid'); }, run(){
-    const g = S.cars.filter(c=>c.state==='grid');
-    const colors = shuffle(g.map(c=>c.color), Math.random);
-    g.forEach((c,i)=>{ c.color=colors[i]; c.scale=0.6; });
-  }},
-  extra:{name:'加一格', can(){ return S.cap===7; }, run(){ S.cap = 8; }},
+  undo:   {name:'撤回',   icon:'↩️', desc:'把上一辆车送回停车场', give:3, price:40,
+           can(){ return S.history.some(h => h.state==='slot'); }, why:'没有可以撤回的车',
+           run(){ const c = S.history.filter(h => h.state==='slot').pop();
+                  S.history.splice(S.history.lastIndexOf(c),1); S.slots.splice(S.slots.indexOf(c),1);
+                  c.state='grid'; c.path=[]; c.cells.forEach(k => S.grid[k]=c); }},
+  pop:    {name:'移出3辆', icon:'🏗️', desc:'把槽位最右边 3 辆车吊到临时区', give:2, price:40,
+           can(){ return S.slots.length>0 && S.buffer.length < BUFFER_CAP; }, why:'槽位是空的',
+           run(){ popToBuffer(3); }},
+  shuffle:{name:'洗牌',   icon:'🔀', desc:'打乱停车场里所有车的颜色', give:2, price:40,
+           can(){ return S.cars.some(c => c.state==='grid'); }, why:'停车场已经空了',
+           run(){ const g = S.cars.filter(c => c.state==='grid'); const cs = shuffle(g.map(c => c.color), Math.random);
+                  g.forEach((c,i) => { c.color = cs[i]; c.appear = performance.now() + i*12; c.scale = 0; }); }},
+  extra:  {name:'加一格', icon:'➕', desc:'本关槽位从 7 格变成 8 格', give:1, price:60,
+           can(){ return S.cap===7; }, why:'本关已经加过一格了',
+           run(){ S.cap = 8; }},
 };
 function popToBuffer(n){
   const take = Math.min(n, S.slots.length, BUFFER_CAP - S.buffer.length);
@@ -350,20 +468,32 @@ function popToBuffer(n){
   moved.forEach(c => { c.state='buffer'; c.path=[]; S.buffer.push(c); });
   S.history = S.history.filter(h => h.state==='slot');
 }
+function applyProp(key){ PROPS[key].run(); refreshProps(); updateSub(); }
 function useProp(key){
-  if(!S || S.over) return;
+  if(!S || S.over || !mask.hidden) return;
+  if(S.level < PROP_UNLOCK_LEVEL){ toast(`第 ${PROP_UNLOCK_LEVEL} 关解锁道具`); return; }
   const p = PROPS[key];
-  if(S.used[key]){ toast(`本关「${p.name}」已用过`); return; }
-  if(!p.can()){ toast(`现在用不了「${p.name}」`); return; }
-  showRewardAd(`获得道具「${p.name}」`, () => {
-    S.used[key] = true; p.run(); refreshProps(); updateSub();
+  if(!p.can()){ toast(p.why); return; }
+  if(meta.inv[key] > 0){ meta.inv[key]--; save(); applyProp(key); return; }
+  openDialog(`<div class="big">${p.icon}</div><h2>${p.name}</h2><p>${p.desc}</p>
+    <button class="btn ad" id="pAd">📺 看广告得 ${p.give} 个</button>
+    <button class="btn primary" id="pBuy" ${meta.coins < p.price ? 'disabled' : ''}>🪙 ${p.price} 买 1 个</button>
+    <button class="btn ghost" id="pNo">算了</button>`);
+  $('#pAd').onclick = () => showRewardAd(`获得 ${p.give} 个「${p.name}」`, () => {
+    meta.inv[key] += p.give - 1; save(); applyProp(key); toast(`已使用 1 个，剩余 ${meta.inv[key]} 个`);
   });
+  $('#pBuy').onclick = () => { meta.coins -= p.price; save(); closeDialog(); applyProp(key); refreshStats(); };
+  $('#pNo').onclick = closeDialog;
 }
 function refreshProps(){
+  const locked = !S || S.level < PROP_UNLOCK_LEVEL;
   document.querySelectorAll('.prop').forEach(b => {
-    const used = S && S.used[b.dataset.prop];
-    b.disabled = !!used;
-    b.querySelector('.badge').textContent = used ? '已用' : '📺';
+    const key = b.dataset.prop, badge = b.querySelector('.badge');
+    b.classList.toggle('locked', locked);
+    if(locked){ badge.textContent = '🔒'; badge.className = 'badge count'; return; }
+    const n = meta.inv[key];
+    badge.textContent = n > 0 ? n : '+';
+    badge.className = 'badge' + (n > 0 ? ' count' : '');
   });
 }
 
@@ -376,11 +506,7 @@ function showRewardAd(rewardText, onReward){
     <button class="btn ghost" id="adSkip">放弃奖励</button>`);
   const timer = setInterval(() => {
     left--; const el = $('#adCount'); if(el) el.textContent = left;
-    if(left<=0){
-      clearInterval(timer);
-      meta.adViews++; refreshStats();
-      closeDialog(); onReward();
-    }
+    if(left<=0){ clearInterval(timer); meta.adViews++; refreshStats(); closeDialog(); onReward(); }
   }, 1000);
   $('#adSkip').onclick = () => { clearInterval(timer); closeDialog(); };
 }
@@ -393,28 +519,26 @@ function showInterstitial(next){
 function refreshStats(){
   $('#stats').textContent = `原型统计 · 激励视频 ${meta.adViews} 次 · 插屏 ${meta.interstitials} 次`;
   $('#coins').textContent = meta.coins;
+  $('#btnSound').textContent = meta.sound ? '🔊' : '🔇';
 }
 
 // ---------- 弹窗 ----------
-function openDialog(html){ dialog.innerHTML = html; mask.hidden = false; }
+function openDialog(html){ dialog.innerHTML = html; mask.hidden = false; press = null; }
 function closeDialog(){ mask.hidden = true; dialog.innerHTML = ''; }
 function showWin(){
   sfx.win();
-  const reward = 10 + S.level * 2;
-  meta.coins += reward; meta.level = S.level + 1;
-  store.set('coins', meta.coins); store.set('level', meta.level); refreshStats();
-  openDialog(`<div class="big">🎉</div><h2>过关啦！</h2><p>猫咪们全都坐上巴士回家了<br>获得 🪙 ${reward}</p>
+  const reward = (10 + S.level * 2) * (S.cfg.boss ? 2 : 1);
+  meta.coins += reward; meta.level = S.level + 1; save(); refreshStats();
+  openDialog(`<div class="big">${S.cfg.boss ? '👑' : '🎉'}</div><h2>${S.cfg.boss ? 'Boss 关通关！' : '过关啦！'}</h2>
+    <p>猫咪们全都坐上巴士回家了<br>获得 🪙 ${reward}</p>
     <button class="btn ad" id="dbl">📺 看广告再领 🪙 ${reward}</button>
     <button class="btn primary" id="next">下一关</button>`);
-  $('#dbl').onclick = () => showRewardAd(`再领 🪙 ${reward}`, () => {
-    meta.coins += reward; store.set('coins', meta.coins); refreshStats(); goNext();
-  });
+  $('#dbl').onclick = () => showRewardAd(`再领 🪙 ${reward}`, () => { meta.coins += reward; save(); refreshStats(); goNext(); });
   $('#next').onclick = goNext;
 }
 function goNext(){
   closeDialog();
   const lv = meta.level;
-  // 第 3 关之后每 2 关一次插屏，新手期不打扰
   if(lv > 3 && lv % 2 === 0) showInterstitial(() => newGame(lv)); else newGame(lv);
 }
 function showLose(){
@@ -423,166 +547,326 @@ function showLose(){
   const pct = Math.round((1 - left / S.total) * 100);
   const title = pct >= 60 ? `只差 ${left} 辆车！` : '槽位塞满啦！';
   const tip = pct >= 60 ? `你已经完成了 ${pct}%，再坚持一下就能过关` : `已完成 ${pct}%，先挑能凑齐三辆的颜色点哦`;
-  openDialog(`<div class="big">😿</div><h2>${title}</h2><p>${tip}</p>
-    ${S.revived ? '' : '<button class="btn ad" id="revive">📺 看广告复活（移出 3 辆车）</button>'}
+  const COST = 60;
+  let btn = '';
+  if(S.revives === 0) btn = '<button class="btn ad" id="revive">📺 看广告复活（移出 3 辆车）</button>';
+  else if(S.revives === 1) btn = `<button class="btn primary" id="revive" ${meta.coins < COST ? 'disabled' : ''}>🪙 ${COST} 金币复活</button>`;
+  openDialog(`<div class="big">😿</div><h2>${title}</h2><p>${tip}</p>${btn}
     <button class="btn ghost" id="retry">重新开始</button>`);
+  const doRevive = () => { S.revives++; S.over = false; closeDialog(); popToBuffer(3); };
   const rv = $('#revive');
-  if(rv) rv.onclick = () => showRewardAd('复活一次', () => {
-    S.revived = true; S.over = false; popToBuffer(3);
-  });
+  if(rv) rv.onclick = S.revives === 0
+    ? () => showRewardAd('复活一次', doRevive)
+    : () => { meta.coins -= COST; save(); refreshStats(); doRevive(); };
   $('#retry').onclick = () => { closeDialog(); newGame(S.level); };
+}
+function showDex(){
+  const DEX_MAX = 30, DEX_REWARD = 50;
+  const cards = CAT_NAMES.map((name, i) => {
+    const n = meta.dex[i], seen = n > 0, max = n >= DEX_MAX;
+    return `<div class="dexcard ${seen ? '' : 'locked'} ${max ? 'max' : ''}">
+      <div class="dexicon" style="background:${seen ? PALETTE[i] : '#C9BBAA'}">${seen ? SYMBOLS[i] : '?'}</div>
+      <div style="flex:1;min-width:0"><b>${seen ? name : '???'}</b>
+      <small>${max ? (meta.dexClaimed[i] ? '已满级' : '可领奖励！') : `送回家 ${n}/${DEX_MAX}`}</small>
+      <div class="bar"><i style="width:${Math.min(100, n/DEX_MAX*100)}%"></i></div></div></div>`;
+  }).join('');
+  const claimable = CAT_NAMES.map((_,i) => i).filter(i => meta.dex[i] >= DEX_MAX && !meta.dexClaimed[i]);
+  openDialog(`<h2>📖 猫咪图鉴</h2><p>每送 ${DEX_MAX} 只同种猫咪回家，可领 🪙 ${DEX_REWARD}</p>
+    <div class="dex">${cards}</div>
+    ${claimable.length ? `<button class="btn primary" id="claim">领取 🪙 ${claimable.length * DEX_REWARD}</button>` : ''}
+    <button class="btn ghost" id="dexClose">关闭</button>`);
+  const cl = $('#claim');
+  if(cl) cl.onclick = () => { claimable.forEach(i => meta.dexClaimed[i] = 1); meta.coins += claimable.length*DEX_REWARD; save(); refreshStats(); showDex(); };
+  $('#dexClose').onclick = closeDialog;
 }
 
 // ---------- 特效 ----------
-function burst(x,y,color){
-  for(let i=0;i<18;i++){
+function burst(x,y,color,n=18){
+  for(let i=0;i<n;i++){
     const a = Math.random()*Math.PI*2, v = 80 + Math.random()*160;
     S.particles.push({x,y,vx:Math.cos(a)*v, vy:Math.sin(a)*v - 60, life:0.7, max:0.7, color: i%3 ? color : '#FFFFFF', r: 3+Math.random()*3});
   }
 }
-function floatText(x,y,text){ S.floats.push({x,y,text,life:1}); }
+function floatText(x,y,text,color='#FF6B3D',size=18){ S.floats.push({x,y,text,life:1.1,color,size}); }
 
 // ---------- 输入 ----------
+function hitBuffer(x,y){
+  for(let i=0;i<S.buffer.length;i++){ const p = bufCenter(i); if(Math.abs(x-p.x) < L.bufH/2 && Math.abs(y-p.y) < L.bufH/2) return S.buffer[i]; }
+  return null;
+}
+function hitGrid(x,y){
+  if(x<L.bx || y<L.by || x>=L.bx+L.bw || y>=L.by+L.bh) return null;
+  return S.grid[Math.floor((y-L.by)/L.cell)*S.cfg.cols + Math.floor((x-L.bx)/L.cell)];
+}
+function localXY(e){ const r = canvas.getBoundingClientRect(); return {x: e.clientX - r.left, y: e.clientY - r.top}; }
 canvas.addEventListener('pointerdown', e => {
   if(!S || S.over || !mask.hidden) return;
-  const r = canvas.getBoundingClientRect();
-  const x = e.clientX - r.left, y = e.clientY - r.top;
-  // 临时区
-  for(const c of S.buffer){
-    const p = bufCenter(S.buffer.indexOf(c));
-    if(Math.abs(x-p.x) < L.bufH/2 && Math.abs(y-p.y) < L.bufH/2){ tapBufferCar(c); return; }
-  }
-  // 停车场
-  if(x>=L.bx && y>=L.by && x<L.bx+L.bw && y<L.by+L.bh){
-    const gx = Math.floor((x-L.bx)/L.cell), gy = Math.floor((y-L.by)/L.cell);
-    const c = S.grid[gy*S.cfg.cols+gx];
-    if(c) tapGridCar(c);
-  }
+  const {x,y} = localXY(e);
+  const b = hitBuffer(x,y); if(b){ tapBufferCar(b); return; }
+  const c = hitGrid(x,y); if(c) press = {car:c, t:performance.now(), preview:false};
 });
+canvas.addEventListener('pointerup', () => {
+  if(!press) return;
+  const p = press; press = null;
+  if(!p.preview && S && !S.over && p.car.state==='grid') tapGridCar(p.car);
+});
+canvas.addEventListener('pointercancel', () => { press = null; });
+canvas.addEventListener('pointerleave', () => { press = null; });
 document.querySelectorAll('.prop').forEach(b => b.addEventListener('click', () => useProp(b.dataset.prop)));
 $('#btnRestart').addEventListener('click', () => { if(mask.hidden) newGame(S.level); });
+$('#btnDex').addEventListener('click', () => { if(mask.hidden) showDex(); });
+$('#btnSound').addEventListener('click', () => { meta.sound = !meta.sound; save(); refreshStats(); });
 window.addEventListener('resize', resize);
 
 // ---------- 绘制 ----------
 function shade(hex, f){
   const n = parseInt(hex.slice(1),16);
-  let r=n>>16, g=n>>8&255, b=n&255;
-  r=Math.round(r*f); g=Math.round(g*f); b=Math.round(b*f);
-  return `rgb(${Math.min(255,r)},${Math.min(255,g)},${Math.min(255,b)})`;
+  const r=Math.min(255,Math.round((n>>16)*f)), g=Math.min(255,Math.round((n>>8&255)*f)), b=Math.min(255,Math.round((n&255)*f));
+  return `rgb(${r},${g},${b})`;
 }
 function rr(x,y,w,h,r){
+  r = Math.min(r, w/2, h/2);
   ctx.beginPath(); ctx.moveTo(x+r,y);
   ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
   ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
 }
+function catFace(cx, cy, s, color){
+  // 小猫脸（用于巴士车窗）
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.moveTo(cx - s*0.45, cy - s*0.1); ctx.lineTo(cx - s*0.38, cy - s*0.6); ctx.lineTo(cx - s*0.08, cy - s*0.32); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx + s*0.45, cy - s*0.1); ctx.lineTo(cx + s*0.38, cy - s*0.6); ctx.lineTo(cx + s*0.08, cy - s*0.32); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, s*0.42, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#2B2222';
+  ctx.beginPath(); ctx.arc(cx - s*0.15, cy - s*0.03, s*0.06, 0, Math.PI*2); ctx.arc(cx + s*0.15, cy - s*0.03, s*0.06, 0, Math.PI*2); ctx.fill();
+}
 function drawCar(c, now){
-  const s = sizeOf(c);
-  let x = c.x, y = c.y, angle = DIRS[c.dir].a;
-  if(c.state==='slot' || c.state==='buffer' || c.state==='die'){ if(!c.path.length) angle = 0; }
-  if(c.shake && now - c.shake < 300){ const k = 1 - (now-c.shake)/300; x += Math.sin(now/18)*4*k; }
-  const color = PALETTE[c.color];
-  ctx.save(); ctx.translate(x,y); ctx.rotate(angle); ctx.scale(c.scale, c.scale);
-  const w = s*0.74, h = s*0.80, r = s*0.2;
-  // 阴影
-  ctx.fillStyle='rgba(60,40,20,.18)'; rr(-w/2+1, -h/2+4, w, h, r); ctx.fill();
-  // 耳朵（车头方向）
-  ctx.fillStyle = color; ctx.strokeStyle = shade(color,.7); ctx.lineWidth = Math.max(1.2, s*0.03);
-  for(const sx of [-1,1]){
-    ctx.beginPath();
-    ctx.moveTo(sx*w*0.42, -h*0.30); ctx.lineTo(sx*w*0.36, -h*0.66); ctx.lineTo(sx*w*0.08, -h*0.42);
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = '#FFC4D6';
-    ctx.beginPath(); ctx.moveTo(sx*w*0.34, -h*0.36); ctx.lineTo(sx*w*0.33, -h*0.55); ctx.lineTo(sx*w*0.17, -h*0.42); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = color;
+  let x = c.x, y = c.y;
+  const d = DIRS[c.dir];
+  if(c.bump){
+    const e = (now - c.bump.t) / 320;
+    if(e >= 1) c.bump = null;
+    else { const k = e < 0.35 ? e/0.35 : Math.max(0, 1 - (e-0.35)/0.65) * Math.cos((e-0.35)*14) ; const off = Math.max(-0.15, k) * c.bump.dist; x += d.dx*off; y += d.dy*off; }
   }
-  // 车身
-  rr(-w/2, -h/2, w, h, r); ctx.fill(); ctx.stroke();
+  if(c.bang && now > c.bang && now - c.bang < 260){ x += Math.sin(now/14) * 3; }
+  const color = PALETTE[c.color];
+  const l = c.dl, w = c.dw, s = Math.min(l, w);
+  ctx.save(); ctx.translate(x,y); ctx.rotate(c.ang); ctx.scale(c.scale, c.scale);
+  const r = s*0.26;
+  // 阴影
+  ctx.fillStyle='rgba(60,40,20,.18)'; rr(-w/2+1, -l/2+4, w, l, r); ctx.fill();
   // 车轮
   ctx.fillStyle = '#3B2F2F';
-  for(const sx of [-1,1]) for(const sy of [-1,1]){ rr(sx*w/2 - s*0.05, sy*h*0.26 - s*0.07, s*0.10, s*0.14, s*0.03); ctx.fill(); }
-  // 车身浅色肚皮
-  ctx.fillStyle = 'rgba(255,255,255,.28)'; rr(-w*0.32, h*0.08, w*0.64, h*0.30, r*0.6); ctx.fill();
-  // 脸
+  const wy = l > w*1.5 ? [-l*0.36, -l*0.12, l*0.12, l*0.36] : [-l*0.27, l*0.27];
+  for(const sx of [-1,1]) for(const yy of wy){ rr(sx*w/2 - s*0.07, yy - s*0.09, s*0.14, s*0.18, s*0.04); ctx.fill(); }
+  // 耳朵（车头）
+  ctx.lineWidth = Math.max(1.2, s*0.035); ctx.strokeStyle = shade(color,.7);
+  for(const sx of [-1,1]){
+    ctx.fillStyle = color;
+    ctx.beginPath(); ctx.moveTo(sx*w*0.44, -l/2 + s*0.22); ctx.lineTo(sx*w*0.36, -l/2 - s*0.16); ctx.lineTo(sx*w*0.06, -l/2 + s*0.08);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFC4D6';
+    ctx.beginPath(); ctx.moveTo(sx*w*0.34, -l/2 + s*0.14); ctx.lineTo(sx*w*0.32, -l/2 - s*0.06); ctx.lineTo(sx*w*0.16, -l/2 + s*0.08); ctx.closePath(); ctx.fill();
+  }
+  // 车身
+  ctx.fillStyle = color; rr(-w/2, -l/2, w, l, r); ctx.fill(); ctx.stroke();
+  // 车头大灯
+  ctx.fillStyle = '#FFF6C2';
+  ctx.beginPath(); ctx.arc(-w*0.30, -l/2 + s*0.1, s*0.06, 0, Math.PI*2); ctx.arc(w*0.30, -l/2 + s*0.1, s*0.06, 0, Math.PI*2); ctx.fill();
+  // 脸（靠近车头）
+  const fy = -l/2 + s*0.36;
   ctx.fillStyle = '#2B2222';
-  ctx.beginPath(); ctx.arc(-w*0.18, -h*0.10, s*0.055, 0, Math.PI*2); ctx.arc(w*0.18, -h*0.10, s*0.055, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-w*0.17, fy, s*0.06, 0, Math.PI*2); ctx.arc(w*0.17, fy, s*0.06, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(-w*0.16, -h*0.13, s*0.02, 0, Math.PI*2); ctx.arc(w*0.20, -h*0.13, s*0.02, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(-w*0.15, fy - s*0.025, s*0.022, 0, Math.PI*2); ctx.arc(w*0.19, fy - s*0.025, s*0.022, 0, Math.PI*2); ctx.fill();
   ctx.fillStyle = '#FF7A9C';
-  ctx.beginPath(); ctx.moveTo(-s*0.035, -h*0.02); ctx.lineTo(s*0.035, -h*0.02); ctx.lineTo(0, h*0.03); ctx.closePath(); ctx.fill();
-  // 方向箭头
-  ctx.fillStyle = 'rgba(255,255,255,.95)';
-  ctx.beginPath(); ctx.moveTo(0, -h*0.47); ctx.lineTo(s*0.07, -h*0.36); ctx.lineTo(-s*0.07, -h*0.36); ctx.closePath(); ctx.fill();
-  // 被挡住时的红色闪烁
-  if(c.flash && now - c.flash < 400){
-    ctx.fillStyle = `rgba(239,79,79,${0.5*(1-(now-c.flash)/400)})`; rr(-w/2, -h/2, w, h, r); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(-s*0.04, fy + s*0.06); ctx.lineTo(s*0.04, fy + s*0.06); ctx.lineTo(0, fy + s*0.11); ctx.closePath(); ctx.fill();
+  // 车尾：颜色符号（色弱也能区分）
+  const sy = l/2 - s*0.28;
+  ctx.fillStyle = 'rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(0, sy, s*0.19, 0, Math.PI*2); ctx.fill();
+  ctx.save(); ctx.translate(0, sy); ctx.rotate(-c.ang);
+  ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(s*0.26)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(SYMBOLS[c.color], 0, s*0.01);
+  ctx.restore();
+  // 被撞到时的红色闪烁
+  if(c.bang && now > c.bang && now - c.bang < 500){
+    ctx.fillStyle = `rgba(239,79,79,${0.45*(1-(now-c.bang)/500)})`; rr(-w/2, -l/2, w, l, r); ctx.fill();
   }
   ctx.restore();
+  // 被撞到时冒出“！”
+  if(c.bang && now > c.bang && now - c.bang < 700){
+    const e = (now - c.bang)/700, by = y - s*0.75 - e*10;
+    ctx.globalAlpha = 1 - e*e;
+    ctx.fillStyle = '#EF4F4F'; ctx.beginPath(); ctx.arc(x + s*0.35, by, s*0.2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = `900 ${Math.round(s*0.3)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('!', x + s*0.35, by + 1);
+    ctx.globalAlpha = 1;
+  }
 }
 function drawBoard(){
   const {cols, rows} = S.cfg;
-  ctx.fillStyle = '#EADFD1'; rr(L.bx-8, L.by-8, L.bw+16, L.bh+16, 18); ctx.fill();
+  ctx.fillStyle = S.cfg.boss ? '#E9D3B8' : '#EADFD1'; rr(L.bx-8, L.by-8, L.bw+16, L.bh+16, 18); ctx.fill();
   ctx.fillStyle = '#F6EFE6'; rr(L.bx-2, L.by-2, L.bw+4, L.bh+4, 14); ctx.fill();
   ctx.strokeStyle = '#E3D5C3'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
   for(let i=1;i<cols;i++){ ctx.beginPath(); ctx.moveTo(L.bx+i*L.cell, L.by+4); ctx.lineTo(L.bx+i*L.cell, L.by+L.bh-4); ctx.stroke(); }
   for(let j=1;j<rows;j++){ ctx.beginPath(); ctx.moveTo(L.bx+4, L.by+j*L.cell); ctx.lineTo(L.bx+L.bw-4, L.by+j*L.cell); ctx.stroke(); }
   ctx.setLineDash([]);
 }
-function drawTray(){
+function drawPreview(c){
+  const d = DIRS[c.dir], b = blockerOf(c);
+  const f = cellCenter(c.fy*S.cfg.cols + c.fx);
+  const sx = f.x + d.dx*L.cell*0.45, sy = f.y + d.dy*L.cell*0.45;
+  const len = b.car ? b.steps*L.cell + L.cell*0.1 : (b.steps + 0.6)*L.cell;
+  const ex = sx + d.dx*len, ey = sy + d.dy*len;
+  const col = b.car ? '#EF4F4F' : '#2DBE7E';
+  ctx.save();
+  ctx.strokeStyle = col; ctx.lineWidth = L.cell*0.16; ctx.lineCap = 'round'; ctx.globalAlpha = 0.75;
+  ctx.setLineDash([L.cell*0.2, L.cell*0.16]); ctx.lineDashOffset = -performance.now()/30;
+  ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke();
+  ctx.setLineDash([]); ctx.globalAlpha = 1;
+  if(b.car){
+    const h = homeOf(b.car);
+    ctx.strokeStyle = '#EF4F4F'; ctx.lineWidth = 3;
+    const bw = (b.car.dir%2 ? b.car.len : 1)*L.cell, bh = (b.car.dir%2 ? 1 : b.car.len)*L.cell;
+    rr(h.x - bw/2 + 2, h.y - bh/2 + 2, bw - 4, bh - 4, 10); ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawTray(now){
   const first = slotCenter(0, S.cap), last = slotCenter(S.cap-1, S.cap);
   const pad = 8, s = L.slotSize;
+  const danger = S.slots.length >= S.cap - 2 && !S.over;
   ctx.fillStyle = '#7A5C48'; rr(first.x - s/2 - pad, L.trayY, last.x - first.x + s + pad*2, L.trayH, 16); ctx.fill();
   for(let i=0;i<S.cap;i++){
     const p = slotCenter(i, S.cap);
     ctx.fillStyle = i===7 ? '#A07A5E' : '#5E4434'; rr(p.x - s/2, p.y - s/2, s, s, 10); ctx.fill();
   }
-  if(S.slots.length >= S.cap - 2 && !S.over){
-    ctx.strokeStyle = `rgba(239,79,79,${0.5+0.5*Math.sin(performance.now()/150)})`; ctx.lineWidth = 3;
+  if(danger){
+    ctx.strokeStyle = `rgba(239,79,79,${0.5+0.5*Math.sin(now/120)})`; ctx.lineWidth = 3;
     rr(first.x - s/2 - pad, L.trayY, last.x - first.x + s + pad*2, L.trayH, 16); ctx.stroke();
+    ctx.fillStyle = '#EF4F4F'; ctx.font = 'bold 12px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline='alphabetic';
+    ctx.fillText(`⚠ 只剩 ${S.cap - S.slots.length} 格`, last.x + s/2 + pad, L.trayY - 6);
   }
   if(S.buffer.length){
     ctx.fillStyle = 'rgba(122,92,72,.15)';
     const b0 = bufCenter(0), b1 = bufCenter(BUFFER_CAP-1);
     rr(b0.x - L.bufH/2 - 6, L.bufY - 4, b1.x - b0.x + L.bufH + 12, L.bufH + 8, 12); ctx.fill();
-    ctx.fillStyle = '#8A7563'; ctx.font = '11px sans-serif'; ctx.textAlign='left';
+    ctx.fillStyle = '#8A7563'; ctx.font = '11px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
     ctx.fillText('临时区（点击放回槽位）', b0.x - L.bufH/2, L.bufY - 8);
   }
 }
+function drawBus(bus){
+  const {w, h, y} = busDims();
+  const x = bus.x, color = PALETTE[bus.color];
+  ctx.save();
+  ctx.fillStyle = 'rgba(60,40,20,.2)'; rr(x - w/2 + 2, y - h/2 + 5, w, h, h*0.3); ctx.fill();
+  ctx.fillStyle = '#3B2F2F';
+  [-0.3, 0.3].forEach(k => { ctx.beginPath(); ctx.arc(x + k*w, y + h/2, h*0.17, 0, Math.PI*2); ctx.fill(); });
+  ctx.fillStyle = color; ctx.strokeStyle = shade(color, .7); ctx.lineWidth = 2;
+  rr(x - w/2, y - h/2, w, h, h*0.3); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = '#FFF6C2'; ctx.beginPath(); ctx.arc(x - w/2 + h*0.12, y + h*0.12, h*0.08, 0, Math.PI*2); ctx.fill();
+  for(let i=0;i<3;i++){
+    const wx = x + (i-1)*w*0.27 + w*0.04, wy = y - h*0.08;
+    ctx.fillStyle = '#E8F6FF'; rr(wx - h*0.3, wy - h*0.28, h*0.6, h*0.5, 6); ctx.fill();
+    if(i < bus.seated){ ctx.save(); rr(wx - h*0.3, wy - h*0.28, h*0.6, h*0.5, 6); ctx.clip(); catFace(wx, wy + h*0.08, h*0.42, color); ctx.restore(); }
+  }
+  ctx.fillStyle = '#fff'; ctx.font = `bold ${Math.round(h*0.2)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(`${SYMBOLS[bus.color]} 喵巴士`, x + w*0.04, y + h*0.33);
+  ctx.restore();
+}
+function drawHand(now){
+  if(!S.tutorial || S.over) return;
+  const free = freeCars(); if(!free.length) return;
+  const cnt = c => S.slots.filter(s => s.color===c.color).length;
+  free.sort((a,b) => cnt(b) - cnt(a) || a.id - b.id);
+  const c = free[0], h = homeOf(c), bob = Math.sin(now/220) * 6;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,138,61,.9)'; ctx.lineWidth = 3;
+  const pr = L.cell*0.5 + (now/12 % 16);
+  ctx.globalAlpha = 1 - (now/12 % 16)/16;
+  ctx.beginPath(); ctx.arc(h.x, h.y, pr, 0, Math.PI*2); ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.font = `${Math.round(L.cell*0.6)}px sans-serif`; ctx.textAlign='center'; ctx.textBaseline='top';
+  ctx.fillText('👆', h.x + L.cell*0.12, h.y + L.cell*0.15 + bob);
+  ctx.restore();
+}
 
+const ease = t => 1 - Math.pow(1 - Math.min(1, Math.max(0, t)), 3);
 let last = performance.now();
 function frame(now){
   const dt = Math.min(0.05, (now - last)/1000); last = now;
   if(S){
-    // 更新位置
-    const speed = L.cell * 22;
+    // 长按预览
+    if(press && !press.preview && now - press.t > 220) press.preview = true;
+
+    // 巴士时间线
+    const bd = busDims();
+    for(const bus of S.buses){
+      if(now < bus.start) continue;
+      const t = (now - bus.start)/1000;
+      const cx = Math.min(Math.max(bus.cx, bd.w/2 + 4), W - bd.w/2 - 4);
+      if(t < 0.32) bus.x = W + bd.w/2 + (cx - W - bd.w/2) * ease(t/0.32);
+      else if(t < 0.75) bus.x = cx;
+      else bus.x = cx - (cx + bd.w) * Math.pow((t - 0.75)/0.45, 2);
+      if(!bus.hornDone){ bus.hornDone = true; sfx.horn(); }
+      if(t >= 0.32 && !bus.fx){
+        bus.fx = true;
+        sfx.clear(bus.combo);
+        burst(cx, bd.y, PALETTE[bus.color]);
+        floatText(cx, bd.y - bd.h*0.9, bus.combo > 1 ? `连击 ×${bus.combo}！` : '喵巴士 +1', bus.combo > 1 ? '#FF3D7F' : '#FF6B3D', bus.combo > 1 ? 22 : 18);
+        meta.dex[bus.color] += 3; save();
+      }
+      bus.done = t > 1.25;
+    }
+
+    // 车辆运动
     for(const c of S.cars){
       if(c.state==='gone') continue;
+      if(c.appear && now >= c.appear){ c.scale = Math.min(1, c.scale + dt*6); if(c.scale>=1) c.appear = 0; }
+      if(c.state==='die' && c.bus && now >= c.bus.start){
+        const t = (now - c.bus.start)/1000;
+        if(t >= 0.18){
+          const i = c.bus.cats.indexOf(c);
+          const tx = c.bus.x + (i-1)*bd.w*0.27 + bd.w*0.04, ty = bd.y;
+          c.x += (tx - c.x) * Math.min(1, dt*18); c.y += (ty - c.y) * Math.min(1, dt*18);
+          c.scale = Math.max(0, c.scale - dt*4);
+          if(t >= 0.34){ c.state = 'gone'; c.bus.seated = Math.min(3, c.bus.seated + 1); }
+          continue;
+        }
+      }
       if(c.path.length){
-        const p = c.path[0], dx = p.x - c.x, dy = p.y - c.y, d = Math.hypot(dx,dy);
-        if(d <= speed*dt){ c.x = p.x; c.y = p.y; c.path.shift(); }
-        else { c.x += dx/d*speed*dt; c.y += dy/d*speed*dt; }
+        c.speed = Math.min(c.speed + L.cell*60*dt, L.cell*26);
+        const p = c.path[0], dx = p.x - c.x, dy = p.y - c.y, d = Math.hypot(dx,dy), v = c.speed*dt;
+        if(d <= v){ c.x = p.x; c.y = p.y; c.path.shift(); }
+        else { c.x += dx/d*v; c.y += dy/d*v; }
       } else {
         const t = c.state==='die' ? {x:c.dieX, y:c.dieY} : targetOf(c);
         const k = Math.min(1, dt*16);
         c.x += (t.x - c.x)*k; c.y += (t.y - c.y)*k;
       }
-      if(c.state!=='die' && c.scale < 1) c.scale = Math.min(1, c.scale + dt*5);
-      if(c.state==='die' && now > c.dieAt){
-        c.scale -= dt*5;
-        if(c.scale <= 0){ c.state='gone'; S.dying.splice(S.dying.indexOf(c),1); }
-      }
+      const dm = dimsOf(c), k2 = Math.min(1, dt*12);
+      c.dl += (dm.l - c.dl)*k2; c.dw += (dm.w - c.dw)*k2;
+      const da = ((dm.a - c.ang + Math.PI*3) % (Math.PI*2)) - Math.PI;
+      c.ang += da * k2;
     }
+    S.buses = S.buses.filter(b => !b.done);
     for(const p of S.particles){ p.life -= dt; p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 400*dt; }
     S.particles = S.particles.filter(p => p.life > 0);
     for(const f of S.floats){ f.life -= dt; f.y -= 40*dt; }
     S.floats = S.floats.filter(f => f.life > 0);
 
+    // 危险心跳
+    if(S.slots.length >= S.cap - 2 && !S.over && mask.hidden && now - S.lastBeat > 900){ S.lastBeat = now; sfx.heart(); }
+
     // 绘制
     ctx.clearRect(0,0,W,H);
-    drawBoard(); drawTray();
-    const grid = S.cars.filter(c => c.state==='grid');
+    drawBoard(); drawTray(now);
+    const gridCars = S.cars.filter(c => c.state==='grid');
+    gridCars.forEach(c => drawCar(c, now));
+    if(press && press.preview && press.car.state==='grid') drawPreview(press.car);
+    drawHand(now);
     const rest = S.cars.filter(c => c.state==='slot' || c.state==='buffer' || c.state==='die');
-    grid.forEach(c => drawCar(c, now));
     rest.filter(c => !c.path.length).forEach(c => drawCar(c, now));
+    S.buses.forEach(drawBus);
     rest.filter(c => c.path.length).forEach(c => drawCar(c, now));
     for(const p of S.particles){
       ctx.globalAlpha = Math.max(0, p.life/p.max); ctx.fillStyle = p.color;
@@ -590,13 +874,15 @@ function frame(now){
     }
     ctx.globalAlpha = 1;
     for(const f of S.floats){
-      ctx.globalAlpha = Math.max(0, f.life); ctx.fillStyle = '#FF6B3D';
-      ctx.font = 'bold 18px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(f.text, f.x, f.y);
+      ctx.globalAlpha = Math.max(0, Math.min(1, f.life)); ctx.fillStyle = f.color;
+      ctx.font = `900 ${f.size}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline='alphabetic';
+      ctx.fillText(f.text, f.x, f.y);
     }
     ctx.globalAlpha = 1;
   }
-  requestAnimationFrame(frame);
+  if(!drawOnly) requestAnimationFrame(frame);
 }
+let drawOnly = false;
 
 // ---------- 启动 ----------
 resize();
@@ -604,7 +890,9 @@ newGame(meta.level);
 requestAnimationFrame(frame);
 
 // 调试入口：控制台里 mlgc.go(5) 跳关
-window.mlgc = { go(n){ closeDialog(); newGame(n); }, state: () => S };
+window.mlgc = { go(n){ closeDialog(); newGame(n); }, state: () => S, meta, freeCars: () => freeCars(), blockerOf: c => blockerOf(c),
+  // 自动化测试用：页面在后台时 rAF 不触发，可手动推进若干毫秒
+  pump(ms){ const end = performance.now() + ms; while(performance.now() < end){ const s = performance.now(); while(performance.now() - s < 16){} drawOnly = true; frame(performance.now()); drawOnly = false; } } };
 })();
 </script>
 </body>
