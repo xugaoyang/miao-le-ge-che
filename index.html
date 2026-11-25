@@ -24,7 +24,7 @@
   #sub{text-align:center;font-size:12px;color:var(--muted);min-height:16px}
   #stage{flex:1;position:relative;min-height:0}
   canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
-  #props{display:flex;justify-content:space-around;padding:8px 12px calc(14px + env(safe-area-inset-bottom))}
+  #props{display:flex;justify-content:space-around;padding:8px 12px 6px}
   .prop{position:relative;border:0;background:var(--card);border-radius:16px;width:72px;height:64px;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:22px;
     box-shadow:0 3px 0 rgba(0,0,0,.12);cursor:pointer;color:var(--ink)}
@@ -51,7 +51,8 @@
   .adbox{background:#222;color:#fff;border-radius:16px;height:180px;display:flex;flex-direction:column;
     align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
   .adbox b{font-size:40px}
-  #stats{position:absolute;left:8px;bottom:4px;font-size:10px;color:var(--muted);opacity:.7;pointer-events:none}
+  #stats{text-align:center;font-size:10px;color:var(--muted);opacity:.7;pointer-events:none;
+    padding-bottom:calc(6px + env(safe-area-inset-bottom))}
 </style>
 </head>
 <body>
@@ -69,8 +70,8 @@
     <button class="prop" data-prop="shuffle"><i>🔀</i><span>洗牌</span><em class="badge">📺</em></button>
     <button class="prop" data-prop="extra"><i>➕</i><span>加一格</span><em class="badge">📺</em></button>
   </div>
-  <div id="toast"></div>
   <div id="stats"></div>
+  <div id="toast"></div>
   <div class="mask" id="mask" hidden><div class="dialog" id="dialog"></div></div>
 </div>
 
@@ -100,7 +101,7 @@ function shuffle(arr, R){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(R(
 
 // 关卡参数：第1关极简，第2关难度断崖，之后循序渐进
 function levelCfg(n){
-  if(n===1) return {cols:4,rows:5,cars:9, colors:3,chunk:3};
+  if(n===1) return {cols:4,rows:5,cars:9, colors:3,chunk:9};
   if(n===2) return {cols:7,rows:9,cars:60,colors:9,chunk:9};
   return {
     cols: 6 + (n % 2),
@@ -420,7 +421,9 @@ function showLose(){
   sfx.lose();
   const left = remaining();
   const pct = Math.round((1 - left / S.total) * 100);
-  openDialog(`<div class="big">😿</div><h2>只差 ${left} 辆车！</h2><p>你已经完成了 ${pct}%，再坚持一下就能过关</p>
+  const title = pct >= 60 ? `只差 ${left} 辆车！` : '槽位塞满啦！';
+  const tip = pct >= 60 ? `你已经完成了 ${pct}%，再坚持一下就能过关` : `已完成 ${pct}%，先挑能凑齐三辆的颜色点哦`;
+  openDialog(`<div class="big">😿</div><h2>${title}</h2><p>${tip}</p>
     ${S.revived ? '' : '<button class="btn ad" id="revive">📺 看广告复活（移出 3 辆车）</button>'}
     <button class="btn ghost" id="retry">重新开始</button>`);
   const rv = $('#revive');
